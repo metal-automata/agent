@@ -1,4 +1,4 @@
-module github.com/metal-toolbox/flasher
+module github.com/metal-automata/flasher
 
 go 1.22
 
@@ -7,7 +7,6 @@ require (
 	github.com/bmc-toolbox/bmclib/v2 v2.3.2
 	github.com/bmc-toolbox/common v0.0.0-20240926143744-8c478be881d7
 	github.com/bombsimon/logrusr/v2 v2.0.1
-	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/emicklei/dot v1.6.2
 	github.com/equinix-labs/otel-init-go v0.0.9
@@ -16,10 +15,10 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jpillora/backoff v1.0.0
-	github.com/metal-toolbox/ctrl v0.2.9
-	github.com/metal-toolbox/fleetdb v1.19.7
-	github.com/metal-toolbox/ironlib v0.5.0
-	github.com/metal-toolbox/rivets v1.3.10
+	github.com/metal-automata/ctrl v0.3.0
+	github.com/metal-automata/fleetdb v1.20.0
+	github.com/metal-automata/ironlib v0.5.1
+	github.com/metal-automata/rivets v1.4.0
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
@@ -99,12 +98,12 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
-	github.com/metal-toolbox/conditionorc v1.1.8 // indirect
+	github.com/metal-automata/conditionorc v1.1.13 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nats-io/nats.go v1.36.0 // indirect
+	github.com/nats-io/nats.go v1.37.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect

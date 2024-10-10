@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/metal-toolbox/flasher/internal/outofband"
-	"github.com/metal-toolbox/flasher/internal/runner"
+	"github.com/metal-automata/flasher/internal/outofband"
+	"github.com/metal-automata/flasher/internal/runner"
 	"github.com/spf13/cobra"
 
 	"github.com/emicklei/dot"

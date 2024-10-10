@@ -7,14 +7,14 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/metal-toolbox/flasher/internal/metrics"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/store"
+	"github.com/metal-automata/flasher/internal/metrics"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/store"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
-	rctypes "github.com/metal-toolbox/rivets/condition"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 // A Runner instance runs a single task, to install firmware on one or more server components.

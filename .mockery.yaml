@@ -1,7 +1,7 @@
 testonly: False
 with-expecter: True
 packages:
-  github.com/metal-toolbox/flasher/internal/runner:
+  github.com/metal-automata/flasher/internal/runner:
     config:
       dir: internal/runner
       fileName: "mock_{{.InterfaceName | firstLower}}.go"
@@ -9,7 +9,7 @@ packages:
     interfaces:
       TaskHandler:
       ActionHandler:
-  github.com/metal-toolbox/flasher/internal/device:
+  github.com/metal-automata/flasher/internal/device:
     config:
       dir: internal/device
       fileName: "mock_{{.InterfaceName | firstLower}}.go"

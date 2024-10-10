@@ -7,7 +7,7 @@ import (
 	"github.com/bmc-toolbox/common"
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-	ironlibm "github.com/metal-toolbox/ironlib/model"
+	ironlibm "github.com/metal-automata/ironlib/model"
 )
 
 //go:generate mockgen -source model.go -destination=../fixtures/mock.go -package=fixtures

@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/metal-toolbox/flasher/internal/version"
+	"github.com/metal-automata/flasher/internal/version"
 	"github.com/spf13/cobra"
 )
 

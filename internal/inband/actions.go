@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/runner"
-	rctypes "github.com/metal-toolbox/rivets/condition"
-	rtypes "github.com/metal-toolbox/rivets/types"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/runner"
+	rctypes "github.com/metal-automata/rivets/condition"
+	rtypes "github.com/metal-automata/rivets/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	ironlibactions "github.com/metal-toolbox/ironlib/actions"
-	imodel "github.com/metal-toolbox/ironlib/model"
+	ironlibactions "github.com/metal-automata/ironlib/actions"
+	imodel "github.com/metal-automata/ironlib/model"
 )
 
 var (

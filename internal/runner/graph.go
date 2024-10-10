@@ -2,7 +2,7 @@ package runner
 
 import (
 	"github.com/emicklei/dot"
-	model "github.com/metal-toolbox/flasher/internal/model"
+	model "github.com/metal-automata/flasher/internal/model"
 )
 
 func Graph() *dot.Graph {

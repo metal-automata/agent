@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jeremywohl/flatten"
-	"github.com/metal-toolbox/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/model"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -57,7 +57,7 @@ type Configuration struct {
 }
 
 // FleetDBAPIOptions defines configuration for the FleetDBAPI client.
-// https://github.com/metal-toolbox/hollow-serverservice
+// https://github.com/metal-automata/hollow-serverservice
 type FleetDBAPIOptions struct {
 	EndpointURL            *url.URL
 	FacilityCode           string   `mapstructure:"facility_code"`

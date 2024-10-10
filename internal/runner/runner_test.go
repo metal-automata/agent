@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/metal-toolbox/flasher/internal/model"
-	rctypes "github.com/metal-toolbox/rivets/condition"
+	"github.com/metal-automata/flasher/internal/model"
+	rctypes "github.com/metal-automata/rivets/condition"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/bmc-toolbox/common"
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/ironlib"
-	iactions "github.com/metal-toolbox/ironlib/actions"
-	ironlibm "github.com/metal-toolbox/ironlib/model"
-	iutils "github.com/metal-toolbox/ironlib/utils"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/ironlib"
+	iactions "github.com/metal-automata/ironlib/actions"
+	ironlibm "github.com/metal-automata/ironlib/model"
+	iutils "github.com/metal-automata/ironlib/utils"
 	"github.com/sirupsen/logrus"
 )
 

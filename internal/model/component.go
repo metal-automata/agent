@@ -8,7 +8,7 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"
 
-	rtypes "github.com/metal-toolbox/rivets/types"
+	rtypes "github.com/metal-automata/rivets/types"
 )
 
 // These components are in most cases are present in a single package and from one vendor in a server,

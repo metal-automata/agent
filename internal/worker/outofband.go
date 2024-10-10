@@ -4,16 +4,16 @@ import (
 	"context"
 	"sync"
 
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/runner"
-	"github.com/metal-toolbox/flasher/internal/store"
-	"github.com/metal-toolbox/flasher/internal/version"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/runner"
+	"github.com/metal-automata/flasher/internal/store"
+	"github.com/metal-automata/flasher/internal/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 
-	"github.com/metal-toolbox/ctrl"
-	rctypes "github.com/metal-toolbox/rivets/condition"
+	"github.com/metal-automata/ctrl"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 const (

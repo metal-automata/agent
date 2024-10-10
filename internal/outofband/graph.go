@@ -4,15 +4,15 @@ import (
 	"context"
 
 	"github.com/emicklei/dot"
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/runner"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/runner"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-	rctypes "github.com/metal-toolbox/rivets/condition"
-	rtypes "github.com/metal-toolbox/rivets/types"
+	rctypes "github.com/metal-automata/rivets/condition"
+	rtypes "github.com/metal-automata/rivets/types"
 )
 
 func GraphSteps(ctx context.Context, g *dot.Graph) error {

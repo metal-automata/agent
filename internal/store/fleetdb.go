@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
-	rctypes "github.com/metal-toolbox/rivets/condition"
-	rfleetdb "github.com/metal-toolbox/rivets/fleetdb"
-	rtypes "github.com/metal-toolbox/rivets/types"
+	fleetdbapi "github.com/metal-automata/fleetdb/pkg/api/v1"
+	rctypes "github.com/metal-automata/rivets/condition"
+	rfleetdb "github.com/metal-automata/rivets/fleetdb"
+	rtypes "github.com/metal-automata/rivets/types"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -22,8 +22,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
-	"github.com/metal-toolbox/flasher/internal/app"
-	"github.com/metal-toolbox/flasher/internal/metrics"
+	"github.com/metal-automata/flasher/internal/app"
+	"github.com/metal-automata/flasher/internal/metrics"
 	"github.com/pkg/errors"
 )
 

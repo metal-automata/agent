@@ -19,7 +19,7 @@ import (
 	logrusrv2 "github.com/bombsimon/logrusr/v2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jpillora/backoff"
-	rtypes "github.com/metal-toolbox/rivets/types"
+	rtypes "github.com/metal-automata/rivets/types"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/exp/slices"

@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/metal-toolbox/ctrl"
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/runner"
-	"github.com/metal-toolbox/rivets/events/registry"
+	"github.com/metal-automata/ctrl"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/runner"
+	"github.com/metal-automata/rivets/events/registry"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -17,9 +17,9 @@ import (
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/common"
-	ironlibm "github.com/metal-toolbox/ironlib/model"
-	rctypes "github.com/metal-toolbox/rivets/condition"
-	rtypes "github.com/metal-toolbox/rivets/types"
+	ironlibm "github.com/metal-automata/ironlib/model"
+	rctypes "github.com/metal-automata/rivets/condition"
+	rtypes "github.com/metal-automata/rivets/types"
 )
 
 func TestSortFirmwareByInstallOrder(t *testing.T) {

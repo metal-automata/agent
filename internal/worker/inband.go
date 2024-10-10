@@ -3,12 +3,12 @@ package worker
 import (
 	"context"
 
-	"github.com/metal-toolbox/ctrl"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/runner"
-	"github.com/metal-toolbox/flasher/internal/store"
-	"github.com/metal-toolbox/flasher/internal/version"
-	rctypes "github.com/metal-toolbox/rivets/condition"
+	"github.com/metal-automata/ctrl"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/runner"
+	"github.com/metal-automata/flasher/internal/store"
+	"github.com/metal-automata/flasher/internal/version"
+	rctypes "github.com/metal-automata/rivets/condition"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"

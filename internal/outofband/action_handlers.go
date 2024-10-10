@@ -10,17 +10,17 @@ import (
 
 	"github.com/bmc-toolbox/common"
 	"github.com/hashicorp/go-multierror"
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/flasher/internal/download"
-	"github.com/metal-toolbox/flasher/internal/metrics"
-	"github.com/metal-toolbox/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/download"
+	"github.com/metal-automata/flasher/internal/metrics"
+	"github.com/metal-automata/flasher/internal/model"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/exp/slices"
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-	rctypes "github.com/metal-toolbox/rivets/condition"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 const (

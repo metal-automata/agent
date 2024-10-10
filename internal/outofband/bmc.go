@@ -14,10 +14,10 @@ import (
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 
 	"github.com/bmc-toolbox/common"
-	"github.com/metal-toolbox/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/device"
 	"github.com/sirupsen/logrus"
 
-	rtypes "github.com/metal-toolbox/rivets/types"
+	rtypes "github.com/metal-automata/rivets/types"
 )
 
 var (

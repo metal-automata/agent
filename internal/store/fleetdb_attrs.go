@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net"
 
-	fleetdbapi "github.com/metal-toolbox/fleetdb/pkg/api/v1"
-	rfleetdb "github.com/metal-toolbox/rivets/fleetdb"
+	fleetdbapi "github.com/metal-automata/fleetdb/pkg/api/v1"
+	rfleetdb "github.com/metal-automata/rivets/fleetdb"
 
-	rtypes "github.com/metal-toolbox/rivets/types"
+	rtypes "github.com/metal-automata/rivets/types"
 
 	"github.com/bmc-toolbox/common"
 	"github.com/pkg/errors"

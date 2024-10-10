@@ -5,7 +5,7 @@ package runner
 import (
 	context "context"
 
-	model "github.com/metal-toolbox/flasher/internal/model"
+	model "github.com/metal-automata/flasher/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
 

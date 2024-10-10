@@ -3,7 +3,7 @@ package model
 import (
 	"context"
 
-	"github.com/metal-toolbox/ctrl"
+	"github.com/metal-automata/ctrl"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

@@ -7,16 +7,16 @@ import (
 	"strings"
 
 	"github.com/bmc-toolbox/common"
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/flasher/internal/inband"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/outofband"
-	"github.com/metal-toolbox/flasher/internal/runner"
-	"github.com/metal-toolbox/flasher/internal/store"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/inband"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/outofband"
+	"github.com/metal-automata/flasher/internal/runner"
+	"github.com/metal-automata/flasher/internal/store"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	rctypes "github.com/metal-toolbox/rivets/condition"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 var (

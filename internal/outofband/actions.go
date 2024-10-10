@@ -3,9 +3,9 @@ package outofband
 import (
 	"context"
 
-	"github.com/metal-toolbox/flasher/internal/device"
-	"github.com/metal-toolbox/flasher/internal/model"
-	"github.com/metal-toolbox/flasher/internal/runner"
+	"github.com/metal-automata/flasher/internal/device"
+	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/runner"
 	"github.com/pkg/errors"
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"

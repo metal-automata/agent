@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	rctypes "github.com/metal-toolbox/rivets/condition"
-	rtypes "github.com/metal-toolbox/rivets/types"
+	rctypes "github.com/metal-automata/rivets/condition"
+	rtypes "github.com/metal-automata/rivets/types"
 )
 
 type Repository interface {

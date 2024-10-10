@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/metal-toolbox/flasher/internal/app"
-	"github.com/metal-toolbox/flasher/internal/install"
-	"github.com/metal-toolbox/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/app"
+	"github.com/metal-automata/flasher/internal/install"
+	"github.com/metal-automata/flasher/internal/model"
 	"github.com/spf13/cobra"
 )
 

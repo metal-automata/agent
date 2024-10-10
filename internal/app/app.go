@@ -9,7 +9,7 @@ import (
 	"time"
 
 	runtime "github.com/banzaicloud/logrus-runtime-formatter"
-	"github.com/metal-toolbox/flasher/internal/model"
+	"github.com/metal-automata/flasher/internal/model"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

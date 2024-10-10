@@ -35,9 +35,9 @@ Note: it expects to be able to reach the BMC interface for the given server.
 In the worker mode `flasher worker`, flasher depends on NATS to
 accept work, a secret store for BMC secrets, a firmware file store for firmware files to install.
 
-Check out the [sandbox](https://github.com/search?q=repo%3Ametal-toolbox%2Fsandbox%20flasher&type=code) for steps to have it running along with its dependencies.
+Check out the [sandbox](https://github.com/search?q=repo%3Ametal-automata%2Fsandbox%20flasher&type=code) for steps to have it running along with its dependencies.
 
-The [sandbox README.md](https://github.com/metal-toolbox/sandbox/blob/main/README.md) includes instructions to register a server, create firmware sets and install them on a server.
+The [sandbox README.md](https://github.com/metal-automata/sandbox/blob/main/README.md) includes instructions to register a server, create firmware sets and install them on a server.
 
 The diagram below depicts the services flasher depends on:
 ```mermaid
