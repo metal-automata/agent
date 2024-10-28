@@ -1,5 +1,5 @@
 export DOCKER_BUILDKIT=1
-LDFLAG_LOCATION := github.com/metal-automata/flasher/internal/version
+LDFLAG_LOCATION := github.com/metal-automata/agent/internal/version
 GIT_COMMIT  := $(shell git rev-parse --short HEAD)
 GIT_BRANCH  := $(shell git symbolic-ref -q --short HEAD)
 GIT_SUMMARY := $(shell git describe --tags --dirty --always)
@@ -7,8 +7,8 @@ VERSION     := $(shell git describe --tags 2> /dev/null)
 BUILD_DATE  := $(shell date +%s)
 GIT_COMMIT_FULL  := $(shell git rev-parse HEAD)
 GO_VERSION := $(shell expr `go version |cut -d ' ' -f3 |cut -d. -f2` \>= 16)
-DOCKER_IMAGE  := "ghcr.io/metal-automata/flasher"
-REPO := "https://github.com/metal-automata/flasher.git"
+DOCKER_IMAGE  := "ghcr.io/metal-automata/agent"
+REPO := "https://github.com/metal-automata/agent.git"
 
 .DEFAULT_GOAL := help
 
@@ -31,7 +31,7 @@ build-osx:
 ifeq (${GO_VERSION}, 0)
 	$(error build requies go version 1.17.n or higher)
 endif
-	CGO_ENABLED=0 go build -o flasher \
+	CGO_ENABLED=0 go build -o agent \
 		-ldflags \
 		"-X ${LDFLAG_LOCATION}.GitCommit=${GIT_COMMIT} \
 		 -X ${LDFLAG_LOCATION}.GitBranch=${GIT_BRANCH} \
@@ -44,7 +44,7 @@ build-linux:
 ifeq (${GO_VERSION}, 0)
 	$(error build requies go version 1.16.n or higher)
 endif
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o flasher \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o agent \
 		-ldflags \
 		"-X ${LDFLAG_LOCATION}.GitCommit=${GIT_COMMIT} \
 		 -X ${LDFLAG_LOCATION}.GitBranch=${GIT_BRANCH} \
@@ -52,7 +52,7 @@ endif
 		 -X ${LDFLAG_LOCATION}.AppVersion=${VERSION} \
 		 -X ${LDFLAG_LOCATION}.BuildDate=${BUILD_DATE}"
 
-## build docker image and tag as ghcr.io/metal-automata/flasher:latest
+## build docker image and tag as ghcr.io/metal-automata/agent:latest
 build-image: build-linux
 	@echo ">>>> NOTE: You may want to execute 'make build-image-nocache' depending on the Docker stages changed"
 	docker build --rm=true -f Dockerfile -t ${DOCKER_IMAGE}:latest . \
@@ -62,9 +62,9 @@ build-image: build-linux
 
 ## tag and push devel docker image to local registry
 push-image-devel: build-image
-	docker tag ${DOCKER_IMAGE}:latest localhost:5001/flasher:latest
-	docker push localhost:5001/flasher:latest
-	kind load docker-image localhost:5001/flasher:latest
+	docker tag ${DOCKER_IMAGE}:latest localhost:5001/agent:latest
+	docker push localhost:5001/agent:latest
+	kind load docker-image localhost:5001/agent:latest
 
 ## push docker image
 push-image:
@@ -72,7 +72,8 @@ push-image:
 
 ## generate doc and flowchart
 gen-docs:
-	CGO_ENABLED=0 go build -o flasher
+	CGO_ENABLED=0 go build -o agent
+	./agent gendocs
 	./docs/generate.sh
 
 # https://gist.github.com/prwhite/8168133

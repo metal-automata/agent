@@ -1,15 +1,15 @@
 testonly: False
 with-expecter: True
 packages:
-  github.com/metal-automata/flasher/internal/runner:
+  github.com/metal-automata/agent/internal/firmware/runner:
     config:
-      dir: internal/runner
+      dir: internal/firmware/runner
       fileName: "mock_{{.InterfaceName | firstLower}}.go"
       inpackage: true
     interfaces:
       TaskHandler:
       ActionHandler:
-  github.com/metal-automata/flasher/internal/device:
+  github.com/metal-automata/agent/internal/device:
     config:
       dir: internal/device
       fileName: "mock_{{.InterfaceName | firstLower}}.go"
@@ -17,3 +17,16 @@ packages:
     interfaces:
       OutofbandQueryor:
       InbandQueryor:
+  github.com/metal-automata/agent/internal/ctrl:
+    config:
+      fileName: "mock_{{.InterfaceName | firstLower}}.go"
+      dir: internal/ctrl
+      inpackage: True
+    interfaces:
+      TaskHandler:
+      Publisher:
+      StatusPublisher:
+      ConditionStatusQueryor:
+      ConditionStatusPublisher:
+      eventStatusAcknowleger:
+      LivenessCheckin:

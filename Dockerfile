@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ENTRYPOINT ["/usr/sbin/flasher"]
+ENTRYPOINT ["/usr/sbin/agent"]
 
-COPY flasher /usr/sbin/flasher
-RUN chmod +x /usr/sbin/flasher
+COPY agent /usr/sbin/agent
+RUN chmod +x /usr/sbin/agent

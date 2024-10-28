@@ -17,7 +17,7 @@ jobs:
       uses: golangci/golangci-lint-action@v6
       with:
         args: --config .golangci.yml --timeout 2m
-        version: v1.56.2
+        version: v1.60.1
 
     - name: Test
       run: go test ./...
@@ -40,19 +40,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build flasher Docker image - no push
-        id: dockerbuild-flasher
+      - name: Build agent Docker image - no push
+        id: dockerbuild-agent
         uses: docker/build-push-action@v6
         with:
            context: .
            push: false
            file: Dockerfile
 
-      - name: Scan image - flasher
-        id: scan-flasher-image
+      - name: Scan image - agent
+        id: scan-agent-image
         uses: anchore/scan-action@v4
         with:
-          image: ghcr.io/metal-automata/flasher:latest
+          image: ghcr.io/metal-automata/agent:latest
           acs-report-enable: true
           fail-build: false
 

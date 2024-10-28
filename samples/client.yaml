@@ -1,0 +1,7 @@
+# config to run agent as a client
+---
+app_kind: client
+inventory_source: serverservice
+serverservice:
+  endpoint: "http://localhost:8000"
+  disable_oauth: true

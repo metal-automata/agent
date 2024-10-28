@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jeremywohl/flatten"
-	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/agent/internal/model"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -36,7 +36,7 @@ type Configuration struct {
 	// Worker configuration
 	Concurrency int `mapstructure:"concurrency"`
 
-	// FacilityCode limits this flasher to events in a facility.
+	// FacilityCode limits this agent to events in a facility.
 	FacilityCode string `mapstructure:"facility_code"`
 
 	// The inventory source - one of serverservice OR Yaml

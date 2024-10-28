@@ -1,5 +1,4 @@
 /*
-Copyright © 2022-2024 Metal Toolbox authors
 Copyright 2024 Metal Automata Authors https://github.com/metal-automata
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/metal-automata/flasher/cmd"
+import "github.com/metal-automata/agent/cmd"
 
 func main() {
 	cmd.Execute()

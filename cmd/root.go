@@ -1,5 +1,4 @@
 /*
-Copyright © 2022-2024 Metal Toolbox authors
 Copyright 2024 Metal Automata Authors https://github.com/metal-automata
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,8 +30,8 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "flasher",
-	Short: "flasher installs firmware",
+	Use:   "agent",
+	Short: "Agent executes actions on bare metal servers",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -45,7 +44,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.flasher.yml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.agent.yml)")
 	rootCmd.PersistentFlags().BoolVarP(&enableProfiling, "enable-pprof", "", false, "Enable profiling endpoint at: "+"http://localhost:9091")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log-level", "info", "set logging level - debug, trace")
 }

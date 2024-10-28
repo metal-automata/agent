@@ -1,4 +1,4 @@
-project_name: flasher
+project_name: agent
 before:
   hooks:
     - go mod tidy
@@ -11,11 +11,11 @@ builds:
       - linux
       - darwin
     ldflags:
-      - -X "github.com/metal-automata/flasher/internal/version.AppVersion={{ .Version }}"
-        -X "github.com/metal-automata/flasher/internal/version.GoVersion={{ .Env.GOVERSION }}"
-        -X "github.com/metal-automata/flasher/internal/version.GitCommit={{ .Commit }}"
-        -X "github.com/metal-automata/flasher/internal/version.GitBranch={{ .Branch }}"
-        -X "github.com/metal-automata/flasher/internal/version.BuildDate={{ .Date }}"
+      - -X "github.com/metal-automata/agent/internal/version.AppVersion={{ .Version }}"
+        -X "github.com/metal-automata/agent/internal/version.GoVersion={{ .Env.GOVERSION }}"
+        -X "github.com/metal-automata/agent/internal/version.GitCommit={{ .Commit }}"
+        -X "github.com/metal-automata/agent/internal/version.GitBranch={{ .Branch }}"
+        -X "github.com/metal-automata/agent/internal/version.BuildDate={{ .Date }}"
 
 archives:
   - id: go

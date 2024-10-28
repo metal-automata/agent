@@ -22,8 +22,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
-	"github.com/metal-automata/flasher/internal/app"
-	"github.com/metal-automata/flasher/internal/metrics"
+	"github.com/metal-automata/agent/internal/app"
+	"github.com/metal-automata/agent/internal/metrics"
 	"github.com/pkg/errors"
 )
 
@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	ErrNoAttributes          = errors.New("no flasher attribute found")
+	ErrNoAttributes          = errors.New("no agent attribute found")
 	ErrAttributeList         = errors.New("error in fleetdb API attribute list")
 	ErrAttributeCreate       = errors.New("error in fleetdb API attribute create")
 	ErrAttributeUpdate       = errors.New("error in fleetdb API attribute update")
@@ -113,7 +113,7 @@ func newClientWithOAuth(ctx context.Context, cfg *app.FleetDBAPIOptions, logger 
 		return nil, err
 	}
 
-	clientID := "flasher"
+	clientID := "agent"
 
 	if cfg.OidcClientID != "" {
 		clientID = cfg.OidcClientID
@@ -234,7 +234,7 @@ func (s *FleetDBAPI) FirmwareSetByID(ctx context.Context, id uuid.UUID) ([]*rcty
 
 // FirmwareByDeviceVendorModel returns the firmware for the device vendor, model.
 func (s *FleetDBAPI) FirmwareByDeviceVendorModel(ctx context.Context, deviceVendor, deviceModel string) ([]*rctypes.Firmware, error) {
-	// lookup flasher task attribute
+	// lookup agent task attribute
 	params := &fleetdbapi.ComponentFirmwareSetListParams{
 		AttributeListParams: []fleetdbapi.AttributeListParams{
 			{

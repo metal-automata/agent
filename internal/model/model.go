@@ -1,5 +1,7 @@
 package model
 
+import rctypes "github.com/metal-automata/rivets/condition"
+
 type (
 	AppKind   string
 	StoreKind string
@@ -9,9 +11,9 @@ type (
 )
 
 const (
-	AppName               = "flasher"
-	AppKindWorker AppKind = "worker"
-	AppKindCLI    AppKind = "cli"
+	AppName                = "agent"
+	AppKindService AppKind = "service"
+	AppKindCLI     AppKind = "cli"
 
 	RunInband    RunMode = "inband"
 	RunOutofband RunMode = "outofband"
@@ -24,8 +26,16 @@ const (
 	LogLevelTrace LogLevel = "trace"
 )
 
-// AppKinds returns the supported flasher app kinds
-func AppKinds() []AppKind { return []AppKind{AppKindWorker} }
+// Returns the Conditions supported by this agent
+func ConditionKinds() []rctypes.Kind {
+	return []rctypes.Kind{
+		rctypes.Inventory,
+		rctypes.FirmwareInstall,
+	}
+}
+
+// AppKinds returns the supported agent app kinds
+func AppKinds() []AppKind { return []AppKind{AppKindService, AppKindCLI} }
 
 // StoreKinds returns the supported asset inventory, firmware configuration sources
 func StoreKinds() []StoreKind {

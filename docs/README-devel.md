@@ -1,5 +1,5 @@
 ## Tasks
-A **Task** represents the flasher work to install one or more firmware on a server.
+A **Task** represents the agent work to install one or more firmware on a server.
 
 Tasks may transition through four possible states,
  - **pending**
@@ -9,14 +9,14 @@ Tasks may transition through four possible states,
  - **succeeded**
 
 ## Actions
-Flasher plans and executes an **Action** for each firmware to be installed within a **Task**.
+Agent plans and executes an **Action** for each firmware to be installed within a **Task**.
 
 ## Steps
-A **Step** is the smallest unit of work carried out by flasher as part of an **Action**.
+A **Step** is the smallest unit of work carried out by agent as part of an **Action**.
 
 ## Flow diagram
 
-The diagram below depicts a flow diagram for a flasher **Task** to install one firmware.
+The diagram below depicts a flow diagram for a agent **Task** to install one firmware.
 ```mermaid
 graph TD;
 	n5("Initialize");

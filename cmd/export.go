@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/metal-automata/flasher/internal/outofband"
-	"github.com/metal-automata/flasher/internal/runner"
+	"github.com/metal-automata/agent/internal/firmware/outofband"
+	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/spf13/cobra"
 
 	"github.com/emicklei/dot"
@@ -13,7 +13,7 @@ import (
 
 var cmdExportFlowDiagram = &cobra.Command{
 	Use:   "export-diagram",
-	Short: "Export mermaidjs flowchart for flasher task transitions",
+	Short: "Export mermaidjs flowchart for firmware task transitions",
 	Run: func(cmd *cobra.Command, _ []string) {
 		g := runner.Graph()
 		if err := outofband.GraphSteps(cmd.Context(), g); err != nil {

@@ -47,6 +47,7 @@ const (
 
 var (
 	errTaskFirmwareParam = errors.New("firmware task parameters error")
+	ErrInitTask          = errors.New("error initializing new task from condition")
 )
 
 // Alias parameterized model.Task
@@ -71,7 +72,7 @@ type TaskData struct {
 	// This flag is set when a action requires a host power cycle.
 	HostPowercycleRequired bool `json:"host_powercycle_required,omitempty"`
 
-	// Flasher determines the firmware to be installed for each component based on the firmware plan method.
+	// Agent determines the firmware to be installed for each component based on the firmware plan method.
 	FirmwarePlanMethod FirmwarePlanMethod `json:"firmware_plan_method,omitempty"`
 
 	// ActionsPlanned to be executed for each firmware to be installed.

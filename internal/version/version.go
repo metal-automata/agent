@@ -47,8 +47,8 @@ func Current() Version {
 func ExportBuildInfoMetric() {
 	buildInfo := promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "flasher_build_info",
-			Help: "A metric with a constant '1' value, labeled by branch, commit, summary, builddate, version, Go version from which Flasher was built.",
+			Name: "agent_build_info",
+			Help: "A metric with a constant '1' value, labeled by branch, commit, summary, builddate, version, Go version from which Agent was built.",
 		},
 		[]string{"branch", "commit", "summary", "builddate", "version", "goversion", "fleetDBAPIVersion"},
 	)

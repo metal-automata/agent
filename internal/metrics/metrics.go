@@ -38,7 +38,7 @@ var (
 func init() {
 	EventsCounter = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "flasher_events_received",
+			Name: "agent_events_received",
 			Help: "A counter metric to measure the total count of events received",
 		},
 		[]string{"valid", "response"}, // valid is true/false, response is ack/nack
@@ -46,7 +46,7 @@ func init() {
 
 	ConditionRunTimeSummary = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: "flasher_condition_duration_seconds",
+			Name: "agent_condition_duration_seconds",
 			Help: "A summary metric to measure the total time spent in completing each condition",
 		},
 		[]string{"condition", "state"},
@@ -54,7 +54,7 @@ func init() {
 
 	ActionRuntimeSummary = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: "flasher_install_action_runtime_seconds",
+			Name: "agent_install_action_runtime_seconds",
 			Help: "A summary metric to measure the total time spent in each install action",
 		},
 		[]string{"vendor", "component", "state"},
@@ -62,7 +62,7 @@ func init() {
 
 	ActionHandlerRunTimeSummary = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
-			Name: "flasher_install_action_handler_seconds",
+			Name: "agent_install_action_handler_seconds",
 			Help: "A summary metric to measure the total time spent in each install action handler being executed",
 		},
 		[]string{"transition", "vendor", "component", "state"},
@@ -70,7 +70,7 @@ func init() {
 
 	DownloadBytes = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "flasher_download_bytes",
+			Name: "agent_download_bytes",
 			Help: "A counter metric to measure firmware downloaded in bytes",
 		},
 		[]string{"component", "vendor"},
@@ -78,7 +78,7 @@ func init() {
 
 	UploadBytes = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "flasher_upload_bytes",
+			Name: "agent_upload_bytes",
 			Help: "A counter metric to measure firmware uploaded in bytes",
 		},
 		[]string{"component", "vendor"},
@@ -86,7 +86,7 @@ func init() {
 
 	StoreQueryErrorCount = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "flasher_store_query_error_count",
+			Name: "agent_store_query_error_count",
 			Help: "A counter metric to measure the total count of errors querying the asset store.",
 		},
 		[]string{"storeKind", "queryKind"},
@@ -94,7 +94,7 @@ func init() {
 
 	NATSErrors = promauto.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "flasher_nats_errors",
+			Name: "agent_nats_errors",
 			Help: "A count of errors while trying to use NATS.",
 		},
 		[]string{"operation"},

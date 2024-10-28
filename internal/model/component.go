@@ -41,7 +41,7 @@ var (
 // NewComponentConverter returns a new ComponentConvertor
 func NewComponentConverter() *ComponentConverter { return &ComponentConverter{} }
 
-// CommonDeviceToComponents converts a bmc-toolbox/common Device object to its flasher Components type
+// CommonDeviceToComponents converts a bmc-toolbox/common Device object to its agent Components type
 //
 // TODO(joel): the bmc-toolbox/common Device component types could implement an interface with
 // methods to retrieve component - firmware installed, vendor, model, serial, slug attributes

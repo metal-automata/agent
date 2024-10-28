@@ -9,7 +9,7 @@ import (
 	"time"
 
 	runtime "github.com/banzaicloud/logrus-runtime-formatter"
-	"github.com/metal-automata/flasher/internal/model"
+	"github.com/metal-automata/agent/internal/model"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -31,7 +31,7 @@ const (
 type App struct {
 	// Viper loads configuration parameters.
 	v *viper.Viper
-	// Flasher configuration.
+	// Agent configuration.
 	Config *Configuration
 	// Logger is the app logger
 	Logger *logrus.Logger
@@ -41,9 +41,9 @@ type App struct {
 	Mode model.RunMode
 }
 
-// New returns returns a new instance of the flasher app
+// New returns returns a new instance of the agent app
 func New(appKind model.AppKind, storeKind model.StoreKind, cfgFile, loglevel string, profiling bool, mode model.RunMode) (*App, <-chan os.Signal, error) {
-	if appKind != model.AppKindWorker && appKind != model.AppKindCLI {
+	if appKind != model.AppKindService && appKind != model.AppKindCLI {
 		return nil, nil, errors.Wrap(ErrAppInit, "invalid app kind: "+string(appKind))
 	}
 
