@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/metal-automata/agent/internal/firmware"
+	"github.com/metal-automata/agent/internal/inventory"
 	"github.com/metal-automata/agent/internal/model"
 	"github.com/metal-automata/agent/internal/store"
 	"github.com/metal-automata/agent/internal/version"
@@ -83,8 +84,15 @@ func (h *OobConditionTaskHandler) HandleTask(
 		return errors.Wrap(model.ErrInitTask, "expected a generic Task object, got nil")
 	}
 
+	h.logger.WithFields(
+		logrus.Fields{
+			"conditionID": genericTask.ID.String(),
+			"kind":        genericTask.Kind,
+		},
+	).Info("processing task..")
+
 	switch genericTask.Kind {
-	case rctypes.FirmwareInstallInband:
+	case rctypes.FirmwareInstall:
 		fwHandler := firmware.NewHandler(
 			h.facilityCode,
 			h.controllerID,
@@ -92,9 +100,24 @@ func (h *OobConditionTaskHandler) HandleTask(
 			publisher,
 		)
 
-		return fwHandler.Run(ctx, genericTask, h.logger)
+		if err := fwHandler.Run(ctx, genericTask, h.logger); err != nil {
+			return err
+		}
 
 	case rctypes.Inventory:
+		invHandler := inventory.NewHandler(
+			h.facilityCode,
+			h.controllerID,
+			h.store,
+			publisher,
+		)
+
+		if err := invHandler.Run(ctx, genericTask, h.logger); err != nil {
+			return err
+		}
+
+	default:
+		return errors.Wrap(model.ErrInitTask, "unsupport task kind: "+string(genericTask.Kind))
 	}
 
 	return nil

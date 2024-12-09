@@ -43,6 +43,9 @@ type OutofbandQueryor interface {
 	FirmwareInstallUploaded(ctx context.Context, component, uploadVerifyTaskID string) (installTaskID string, err error)
 
 	FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error)
+
+	// BiosConfiguration retrieves the bios configuration for the device
+	BiosConfiguration(ctx context.Context) (map[string]string, error)
 }
 
 type InbandQueryor interface {

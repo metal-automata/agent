@@ -7,10 +7,7 @@ import (
 	"strings"
 	"time"
 
-	fleetdbapi "github.com/metal-automata/fleetdb/pkg/api/v1"
-	rctypes "github.com/metal-automata/rivets/condition"
-	rfleetdb "github.com/metal-automata/rivets/fleetdb"
-	rtypes "github.com/metal-automata/rivets/types"
+	"github.com/bmc-toolbox/common"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -24,7 +21,12 @@ import (
 
 	"github.com/metal-automata/agent/internal/app"
 	"github.com/metal-automata/agent/internal/metrics"
+	"github.com/metal-automata/agent/internal/model"
 	"github.com/pkg/errors"
+
+	fleetdbapi "github.com/metal-automata/fleetdb/pkg/api/v1"
+	rctypes "github.com/metal-automata/rivets/condition"
+	rfleetdb "github.com/metal-automata/rivets/fleetdb"
 )
 
 const (
@@ -65,8 +67,9 @@ var (
 type FleetDBAPI struct {
 	config *app.FleetDBAPIOptions
 	// componentSlugs map[string]string
-	client *fleetdbapi.Client
-	logger *logrus.Logger
+	slugMap rctypes.ComponentSlugMap
+	client  *fleetdbapi.Client
+	logger  *logrus.Logger
 }
 
 func NewServerserviceStore(ctx context.Context, config *app.FleetDBAPIOptions, logger *logrus.Logger) (Repository, error) {
@@ -85,11 +88,19 @@ func NewServerserviceStore(ctx context.Context, config *app.FleetDBAPIOptions, l
 		}
 	}
 
-	return &FleetDBAPI{
-		client: client,
-		config: config,
-		logger: logger,
-	}, nil
+	apiclient := &FleetDBAPI{
+		client:  client,
+		config:  config,
+		logger:  logger,
+		slugMap: make(rctypes.ComponentSlugMap),
+	}
+
+	// add component types if they don't exist
+	if err := apiclient.createServerComponentTypes(ctx); err != nil {
+		return nil, err
+	}
+
+	return apiclient, nil
 }
 
 // returns a fleetdb API retryable http client with Otel and Oauth wrapped in
@@ -144,7 +155,13 @@ func newClientWithOAuth(ctx context.Context, cfg *app.FleetDBAPIOptions, logger 
 	)
 }
 
-func (s *FleetDBAPI) registerMetric(queryKind string) {
+// Converts from the common.Device to the fleetdbapi.Server type
+func (s *FleetDBAPI) ConvertCommonDevice(serverID uuid.UUID, hw *common.Device, collectionMethod model.InstallMethod, checkComponentSlug bool) (*rctypes.Server, error) {
+	converter := fleetdbapi.NewComponentConverter(fleetdbapi.CollectionMethod(collectionMethod), s.slugMap, !checkComponentSlug)
+	return converter.FromCommonDevice(serverID, hw)
+}
+
+func (s *FleetDBAPI) registerErrorMetric(queryKind string) {
 	metrics.StoreQueryErrorCount.With(
 		prometheus.Labels{
 			"storeKind": "serverservice",
@@ -154,7 +171,7 @@ func (s *FleetDBAPI) registerMetric(queryKind string) {
 }
 
 // AssetByID returns an Asset object with various attributes populated.
-func (s *FleetDBAPI) AssetByID(ctx context.Context, id string) (*rtypes.Server, error) {
+func (s *FleetDBAPI) AssetByID(ctx context.Context, id string) (*rctypes.Server, error) {
 	ctx, span := otel.Tracer(pkgName).Start(ctx, "FleetDBAPI.AssetByID")
 	defer span.End()
 
@@ -163,58 +180,26 @@ func (s *FleetDBAPI) AssetByID(ctx context.Context, id string) (*rtypes.Server, 
 		return nil, errors.Wrap(ErrDeviceID, err.Error()+id)
 	}
 
-	asset := &rtypes.Server{ID: deviceUUID.String()}
-
-	// query credentials
-	credential, _, err := s.client.GetCredential(ctx, deviceUUID, fleetdbapi.ServerCredentialTypeBMC)
-	if err != nil {
-		s.registerMetric("GetCredential")
-
-		return nil, errors.Wrap(ErrServerserviceQuery, "GetCredential: "+err.Error())
-	}
-
-	asset.BMCUser = credential.Username
-	asset.BMCPassword = credential.Password
-
 	// query the server object
-	srv, _, err := s.client.Get(ctx, deviceUUID)
+	srv, _, err := s.client.GetServer(ctx, deviceUUID, &fleetdbapi.ServerGetParams{IncludeBMC: true, IncludeComponents: true})
 	if err != nil {
-		s.registerMetric("GetServer")
+		s.registerErrorMetric("GetServer")
 
 		return nil, errors.Wrap(ErrServerserviceQuery, "GetServer: "+err.Error())
 	}
 
-	asset.Facility = srv.FacilityCode
-
-	// set bmc address
-	bmcAddress, err := s.bmcAddressFromAttributes(srv.Attributes)
+	// query credentials
+	credential, _, err := s.client.GetCredential(ctx, deviceUUID, fleetdbapi.ServerCredentialTypeBMC)
 	if err != nil {
-		return nil, err
+		s.registerErrorMetric("GetCredential")
+
+		return nil, errors.Wrap(ErrServerserviceQuery, "GetCredential: "+err.Error())
 	}
 
-	asset.BMCAddress = bmcAddress.String()
+	srv.BMC.Username = credential.Username
+	srv.BMC.Password = credential.Password
 
-	// set asset vendor attributes
-	asset.Vendor, asset.Model, asset.Serial, err = s.vendorModelFromAttributes(srv.Attributes)
-	if err != nil {
-		s.logger.WithError(err).Warn(ErrVendorModelAttributes)
-	}
-
-	// query asset component inventory -- the default on the server object do not
-	// include all required information
-	components, _, err := s.client.GetComponents(ctx, deviceUUID, nil)
-	if err != nil {
-		s.registerMetric("GetComponents")
-
-		s.logger.WithError(err).Warn(errors.Wrap(ErrServerserviceQuery, "component information query failed"))
-
-		return asset, nil
-	}
-
-	// convert from fleetdb API components to Asset.Components
-	asset.Components = s.fromServerserviceComponents(components)
-
-	return asset, nil
+	return srv, nil
 }
 
 // FirmwareSetByID returns a list of firmwares part of a firmware set identified by the given id.
@@ -224,7 +209,7 @@ func (s *FleetDBAPI) FirmwareSetByID(ctx context.Context, id uuid.UUID) ([]*rcty
 
 	firmwareset, _, err := s.client.GetServerComponentFirmwareSet(ctx, id)
 	if err != nil {
-		s.registerMetric("GetFirmwareSet")
+		s.registerErrorMetric("GetFirmwareSet")
 
 		return nil, errors.Wrap(ErrServerserviceQuery, "GetFirmwareSet: "+err.Error())
 	}
@@ -348,4 +333,73 @@ func intoFirmwaresSlice(componentFirmware []fleetdbapi.ComponentFirmwareVersion)
 	}
 
 	return firmwares
+}
+
+func (s *FleetDBAPI) createServerComponentTypes(ctx context.Context) error {
+	ctx, span := otel.Tracer(pkgName).Start(ctx, "fleetdbapi.createServerComponentTypes")
+	defer span.End()
+
+	existing, err := s.listServerComponentTypes(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(existing) > 0 {
+		return nil
+	}
+
+	componentSlugs := []string{
+		common.SlugBackplaneExpander,
+		common.SlugChassis,
+		common.SlugTPM,
+		common.SlugGPU,
+		common.SlugCPU,
+		common.SlugPhysicalMem,
+		common.SlugStorageController,
+		common.SlugBMC,
+		common.SlugBIOS,
+		common.SlugDrive,
+		common.SlugDriveTypePCIeNVMEeSSD,
+		common.SlugDriveTypeSATASSD,
+		common.SlugDriveTypeSATAHDD,
+		common.SlugNIC,
+		common.SlugNICPort,
+		common.SlugPSU,
+		common.SlugCPLD,
+		common.SlugEnclosure,
+		common.SlugUnknown,
+		common.SlugMainboard,
+	}
+
+	for _, slug := range componentSlugs {
+		sct := fleetdbapi.ServerComponentType{
+			Name: slug,
+			Slug: strings.ToLower(slug),
+		}
+
+		_, err := s.client.CreateServerComponentType(ctx, sct)
+		if err != nil {
+			s.registerErrorMetric("CreateServerComponentTypes")
+
+			return errors.Wrap(ErrServerserviceQuery, "CreateServerComponentTypes: "+err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (s *FleetDBAPI) listServerComponentTypes(ctx context.Context) (fleetdbapi.ServerComponentTypeSlice, error) {
+	existing, _, err := s.client.ListServerComponentTypes(ctx, nil)
+	if err != nil {
+		s.registerErrorMetric("ListServerComponentTypes")
+
+		return nil, errors.Wrap(ErrServerserviceQuery, "ListServerComponentTypes: "+err.Error())
+	}
+
+	// update cached records
+	for _, ct := range existing {
+		s.slugMap[ct.Slug] = ct
+	}
+
+	return existing, nil
 }

@@ -87,7 +87,7 @@ func NewNatsController(
 
 	hostname, _ := os.Hostname()
 
-	queueCfg := queueConfig(appName, facilityCode, natsURL, credsFile)
+	queueCfg := queueConfig(appName, facilityCode, natsURL, credsFile, conditionKinds)
 	nwp := &NatsController{
 		hostname:          hostname,
 		facilityCode:      facilityCode,
@@ -372,6 +372,14 @@ func (n *NatsController) processConditionFromEvent(ctx context.Context, msg even
 
 	// check current state is finalized
 	if n.stateFinalized(ctx, cond, conditionStatusQueryor, eventAcknowleger) {
+		n.logger.WithFields(
+			logrus.Fields{
+				"conditionID": cond.ID.String(),
+				"state":       cond.State,
+				"updated":     cond.UpdatedAt.Local().String(),
+			},
+		).Info("condition in final state, nothing to do here")
+
 		return
 	}
 

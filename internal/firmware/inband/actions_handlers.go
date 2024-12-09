@@ -51,12 +51,17 @@ func (h *handler) installedEqualsExpected(ctx context.Context, component, expect
 			"component": component,
 		}).Debug("Querying device inventory from BMC for current component firmware")
 
-	components, err := model.NewComponentConverter().CommonDeviceToComponents(inv)
+	server, err := h.actionCtx.Store.ConvertCommonDevice(
+		h.actionCtx.Task.Parameters.AssetID,
+		inv,
+		model.InstallMethodOutofband,
+		false,
+	)
 	if err != nil {
 		return err
 	}
 
-	found := components.ByNameModel(component, models)
+	found := model.FindComponentByNameModel(server.Components, component, models)
 	if found == nil {
 		h.logger.WithFields(
 			logrus.Fields{
@@ -74,21 +79,24 @@ func (h *handler) installedEqualsExpected(ctx context.Context, component, expect
 		)
 	}
 
+	installedVersion := found.InstalledFirmware.Version
+
 	h.logger.WithFields(
 		logrus.Fields{
 			"component": component,
 			"model":     found.Model,
 			"vendor":    found.Vendor,
+			"installed": installedVersion,
 		}).Debug("component for update identified")
 
-	if strings.TrimSpace(found.Firmware.Installed) == "" {
+	if strings.TrimSpace(installedVersion) == "" {
 		return ErrInstalledVersionUnknown
 	}
 
-	if !strings.EqualFold(expectedFirmware, found.Firmware.Installed) {
+	if !strings.EqualFold(expectedFirmware, installedVersion) {
 		return errors.Wrap(
 			ErrInstalledFirmwareNotEqual,
-			fmt.Sprintf("expected: %s, current: %s", expectedFirmware, found.Firmware.Installed),
+			fmt.Sprintf("expected: %s, current: %s", expectedFirmware, installedVersion),
 		)
 	}
 

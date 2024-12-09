@@ -74,7 +74,7 @@ func (h *InbandConditionTaskHandler) HandleTask(
 	}
 
 	switch genericTask.Kind {
-	case rctypes.FirmwareInstall:
+	case rctypes.FirmwareInstallInband:
 		fwHandler := firmware.NewHandler(
 			h.facilityCode,
 			"",

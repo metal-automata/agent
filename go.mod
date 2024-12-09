@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e
 	github.com/bmc-toolbox/bmclib/v2 v2.3.2
-	github.com/bmc-toolbox/common v0.0.0-20240926143744-8c478be881d7
+	github.com/bmc-toolbox/common v0.0.0-20241031162543-6b96e5981a0d
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/emicklei/dot v1.6.2
@@ -16,7 +16,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jpillora/backoff v1.0.0
 	github.com/metal-automata/conditionorc v1.1.13
-	github.com/metal-automata/fleetdb v1.20.0
+	github.com/metal-automata/fleetdb v1.20.2-0.20241207145538-a1444886ea21
 	github.com/metal-automata/ironlib v0.5.1
 	github.com/metal-automata/rivets v1.4.0
 	github.com/mitchellh/copystructure v1.2.0
@@ -83,14 +83,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hetiansu5/urlquery v1.2.7 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.14.3 // indirect
-	github.com/jackc/pgio v1.0.0 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.3.3 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgtype v1.14.3 // indirect
-	github.com/jackc/pgx/v4 v4.18.3 // indirect
 	github.com/jacobweinstock/iamt v0.0.0-20230502042727-d7cdbe67d9ef // indirect
 	github.com/jacobweinstock/registrar v0.4.7 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
@@ -169,3 +161,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/metal-automata/rivets => ../rivets
+
+replace github.com/metal-automata/fleetdb => ../fleetdb

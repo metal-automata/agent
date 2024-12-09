@@ -68,7 +68,7 @@ func (p *PublisherHTTP) Publish(ctx context.Context, task *condition.Task[any, a
 		err = errors.Join(err, errTask)
 	}
 
-	errSV := p.statusValuePublisher.Publish(ctx, task.Server.ID, task.State, task.Status.MustMarshal(), tsUpdateOnly)
+	errSV := p.statusValuePublisher.Publish(ctx, task.Server.UUID.String(), task.State, task.Status.MustMarshal(), tsUpdateOnly)
 	if errSV != nil {
 		p.logger.WithError(errSV).Error("Status Value publish error")
 		err = errors.Join(err, errSV)
@@ -139,7 +139,7 @@ func (p *PublisherNATS) Publish(ctx context.Context, task *condition.Task[any, a
 		err = errors.Join(err, errTask)
 	}
 
-	errSV := p.statusValuePublisher.Publish(ctx, task.Server.ID, task.State, task.Status.MustMarshal(), tsUpdateOnly)
+	errSV := p.statusValuePublisher.Publish(ctx, task.Server.UUID.String(), task.State, task.Status.MustMarshal(), tsUpdateOnly)
 	if errSV != nil {
 		p.logger.WithError(errSV).Error("Status Value publish error")
 		err = errors.Join(err, errSV)
