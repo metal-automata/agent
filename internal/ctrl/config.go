@@ -13,19 +13,23 @@ const (
 )
 
 func queueConfig(appName, facilityCode, natsURL, credsFile string, conditionKinds []condition.Kind) events.NatsOptions {
-	consumerSubjects := []string{}
-	for _, kind := range conditionKinds {
-		// prepare consumer subjects
-		sub := fmt.Sprintf(
-			// com.hollow.sh.controllers.commands.sandbox.servers.
-			"%s.%s.servers.%s",
-			subjectPrefix,
-			facilityCode,
-			kind,
-		)
+	//	fmt.Println("appname:", appName)
+	//	fmt.Println("consumer subjects: ")
+	//consumerSubjects := []string{}
+	//for _, kind := range conditionKinds {
+	// prepare consumer subjects
+	sub := fmt.Sprintf(
+		// com.hollow.sh.controllers.commands.sandbox.servers.
+		"%s.%s.servers.>",
+		subjectPrefix,
+		facilityCode,
+	)
 
-		consumerSubjects = append(consumerSubjects, sub)
-	}
+	fmt.Println(sub)
+	///consumerSubjects = append(consumerSubjects, sub)
+	//}
+
+	fmt.Printf("filter subject: %s\n", subjectPrefix+".>")
 
 	return events.NatsOptions{
 		URL:            natsURL,
@@ -48,8 +52,8 @@ func queueConfig(appName, facilityCode, natsURL, credsFile string, conditionKind
 			MaxAckPending:     10,
 			Name:              fmt.Sprintf("%s-%s", facilityCode, appName),
 			QueueGroup:        appName,
-			FilterSubject:     subjectPrefix + ".>",
-			SubscribeSubjects: consumerSubjects,
+			FilterSubject:     sub,
+			SubscribeSubjects: []string{sub},
 		},
 		KVReplicationFactor: 3,
 	}

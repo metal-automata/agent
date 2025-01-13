@@ -563,6 +563,15 @@ func (n *NatsController) processCondition(
 
 	errHandler := n.runTaskHandlerWithMonitor(handlerCtx, task, publisher, statusInterval)
 	if errHandler != nil {
+		task.Status.Append(errHandler.Error())
+		task.State = condition.Failed
+		if err := publisher.Publish(ctx, task, false); err != nil {
+			msg := "final failed task status publish failure"
+			n.logger.WithError(err).WithFields(logrus.Fields{
+				"conditionID": cond.ID.String(),
+			}).Error(msg)
+		}
+
 		registerConditionRuntimeMetric(startTS, string(condition.Failed))
 
 		// handler indicates this must be retried

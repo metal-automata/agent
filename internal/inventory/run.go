@@ -43,8 +43,8 @@ func (h *Handler) Run(ctx context.Context, genericTask *rctypes.Task[any, any], 
 	task, runMode, ctxLogger, err := h.initTask(ctx, genericTask, l)
 	if err != nil {
 		l.WithFields(logrus.Fields{
-			"assetID":      task.Parameters.AssetID.String(),
-			"conditionID":  task.ID,
+			"assetID":      genericTask.Server.UUID.String(),
+			"conditionID":  genericTask.ID,
 			"controllerID": h.controllerID,
 			"err":          err.Error(),
 			"mode":         runMode,
@@ -58,22 +58,38 @@ func (h *Handler) Run(ctx context.Context, genericTask *rctypes.Task[any, any], 
 	switch runMode {
 	case model.RunInband:
 	case model.RunOutofband:
-		//h := NewOutofbandHandler(
-		//	h.facilityCode,
-		//	h.controllerID,
-		//	h.repository,
-		//	h.publisher,
-		//	ctxLogger,
-		//)
+		h := NewOutofbandHandler(
+			h.facilityCode,
+			h.controllerID,
+			h.repository,
+			h.publisher,
+			ctxLogger,
+		)
 
-		//collected, err := h.Collect(ctx, task)
-		//if err != nil {
-		//	return err
-		//}
+		collection, err := h.Collect(ctx, task)
+		if err != nil {
+			return err
+		}
 
-		// todo:
-		// - transform
-		// - publish
+		var initialized bool
+		server, err := h.repository.AssetByID(ctx, task.Server.UUID.String())
+		if err != nil {
+			return err
+		}
+
+		if len(server.Components) != 0 {
+			initialized = true
+		}
+
+		convInventory, err := h.repository.ConvertCommonDevice(task.Server.UUID, collection.inventory, model.InstallMethodOutofband, true)
+		if err != nil {
+			return err
+		}
+
+		err = h.repository.SetComponentInventory(ctx, task.Server.UUID, convInventory.Components, initialized, model.InstallMethodOutofband)
+		if err != nil {
+			return err
+		}
 	}
 
 	ctxLogger.Info("task for device completed")

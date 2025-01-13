@@ -403,3 +403,13 @@ func (s *FleetDBAPI) listServerComponentTypes(ctx context.Context) (fleetdbapi.S
 
 	return existing, nil
 }
+
+func (s *FleetDBAPI) SetComponentInventory(ctx context.Context, serverID uuid.UUID, components fleetdbapi.ServerComponentSlice, initialized bool, method model.CollectionMethod) error {
+	if initialized {
+		_, err := s.client.UpdateComponentCollection(ctx, serverID, components, fleetdbapi.CollectionMethod(method))
+		return errors.Wrap(ErrServerserviceQuery, "InitComponentCollection: "+err.Error())
+	}
+
+	_, err := s.client.InitComponentCollection(ctx, serverID, components, fleetdbapi.CollectionMethod(method))
+	return errors.Wrap(ErrServerserviceQuery, "InitComponentCollection: "+err.Error())
+}
