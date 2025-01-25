@@ -50,14 +50,15 @@ func (c *OutofbandHandler) Collect(ctx context.Context, task *model.InventoryTas
 
 	collected.inventory = commonDevice
 
+	// TODO: provide BIOS configuration storage in fleetdb
 	// collect BIOS configurations
-	biosCfg, err := queryor.BiosConfiguration(ctx)
-	if err != nil {
-		errB := collectionError("bioscfg", err)
-		c.logger.WithError(errB).Warn("bios configuration collection error")
-	}
+	//biosCfg, err := queryor.BiosConfiguration(ctx)
+	//if err != nil {
+	//	errB := collectionError("bioscfg", err)
+	//	c.logger.WithError(errB).Warn("bios configuration collection error")
+	//}
 
-	collected.biosCfg = biosCfg
+	//collected.biosCfg = biosCfg
 
 	return collected, nil
 }

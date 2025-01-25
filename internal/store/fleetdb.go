@@ -180,8 +180,19 @@ func (s *FleetDBAPI) AssetByID(ctx context.Context, id string) (*rctypes.Server,
 		return nil, errors.Wrap(ErrDeviceID, err.Error()+id)
 	}
 
+	params := &fleetdbapi.ServerQueryParams{
+		IncludeBMC:        true,
+		IncludeComponents: true,
+		ComponentParams: &fleetdbapi.ServerComponentGetParams{
+			InstalledFirmware: true,
+			Status:            true,
+			Capabilities:      true,
+			Metadata:          []string{fleetdbapi.ComponentMetadataGenericNS},
+		},
+	}
+
 	// query the server object
-	srv, _, err := s.client.GetServer(ctx, deviceUUID, &fleetdbapi.ServerGetParams{IncludeBMC: true, IncludeComponents: true})
+	srv, _, err := s.client.GetServer(ctx, deviceUUID, params)
 	if err != nil {
 		s.registerErrorMetric("GetServer")
 
@@ -404,12 +415,131 @@ func (s *FleetDBAPI) listServerComponentTypes(ctx context.Context) (fleetdbapi.S
 	return existing, nil
 }
 
-func (s *FleetDBAPI) SetComponentInventory(ctx context.Context, serverID uuid.UUID, components fleetdbapi.ServerComponentSlice, initialized bool, method model.CollectionMethod) error {
-	if initialized {
-		_, err := s.client.UpdateComponentCollection(ctx, serverID, components, fleetdbapi.CollectionMethod(method))
-		return errors.Wrap(ErrServerserviceQuery, "InitComponentCollection: "+err.Error())
+func (s *FleetDBAPI) SetComponentInventory(ctx context.Context, serverID uuid.UUID, device *common.Device, method model.CollectionMethod) error {
+	currentInventory, err := s.AssetByID(ctx, serverID.String())
+	if err != nil {
+		return err
 	}
 
-	_, err := s.client.InitComponentCollection(ctx, serverID, components, fleetdbapi.CollectionMethod(method))
-	return errors.Wrap(ErrServerserviceQuery, "InitComponentCollection: "+err.Error())
+	newInventory, err := s.ConvertCommonDevice(serverID, device, model.InstallMethodOutofband, true)
+	if err != nil {
+		return err
+	}
+
+	// initialize component records
+	if len(currentInventory.Components) == 0 {
+		if _, err := s.client.InitComponentCollection(ctx, serverID, newInventory.Components, fleetdbapi.CollectionMethod(method)); err != nil {
+			return errors.Wrap(ErrServerserviceQuery, "InitComponentCollection: "+err.Error())
+
+		}
+
+		s.logger.WithFields(
+			logrus.Fields{
+				"Server":  serverID.String(),
+				"creates": len(newInventory.Components),
+			},
+		).Info("Component inventory initialized")
+
+		return nil
+	}
+
+	// propose component changes
+	// - component attribute updates can be published
+	// - component additions or removal are to be proposed (which then requires the admin to approve)
+	componentsInRecord := fleetdbapi.ServerComponentSlice(currentInventory.Components).AsMap()
+	componentsFound := fleetdbapi.ServerComponentSlice(newInventory.Components).AsMap()
+
+	creates := make(fleetdbapi.ServerComponentSlice, 0)
+	updates := make(fleetdbapi.ServerComponentSlice, 0)
+	deletes := make(fleetdbapi.ServerComponentSlice, 0)
+
+	for key, found := range componentsFound {
+		record, exists := componentsInRecord[key]
+		if !exists {
+			creates = append(creates, found)
+			s.logger.WithFields(
+				logrus.Fields{
+					"Server":      serverID.String(),
+					"ID":          record.UUID,
+					"slug:serial": key,
+				},
+			).Info("component create")
+		} else {
+			// update record
+			differences, equal := record.Equals(found)
+			if !equal {
+				updates = append(updates, found)
+				s.logger.WithFields(
+					logrus.Fields{
+						"Server":      serverID.String(),
+						"ID":          record.UUID,
+						"slug:serial": key,
+						"differs":     differences,
+					},
+				).Info("component update")
+			}
+		}
+
+		// delete component from map
+		delete(componentsInRecord, key)
+	}
+
+	// any remaining items in record are to be purged
+	// -TBD based on OOB/Inband
+	for key, component := range componentsInRecord {
+		deletes = append(deletes, component)
+		s.logger.WithFields(
+			logrus.Fields{
+				"Server":      serverID.String(),
+				"ID":          component.UUID,
+				"slug:serial": key,
+			},
+		).Info("component delete")
+	}
+
+	if len(updates) > 0 {
+		if _, err := s.client.UpdateComponentCollection(ctx, serverID, updates, fleetdbapi.CollectionMethod(method)); err != nil {
+			return errors.Wrap(ErrServerserviceQuery, "UpdateComponentCollection: "+err.Error())
+		}
+
+		s.logger.WithFields(
+			logrus.Fields{
+				"Server":  serverID.String(),
+				"updates": len(updates),
+			},
+		).Info("Component updates published")
+
+	}
+
+	if len(creates) > 0 || len(deletes) > 0 {
+		report := &fleetdbapi.ComponentChangeReport{
+			CollectionMethod: string(method),
+			Creates:          creates,
+			Deletes:          deletes,
+		}
+
+		reportResponse, _, err := s.client.ReportComponentChanges(ctx, serverID.String(), report)
+		if err != nil {
+			return errors.Wrap(ErrServerserviceQuery, "ReportComponentChanges: "+err.Error())
+		}
+
+		s.logger.WithFields(
+			logrus.Fields{
+				"Server":         serverID.String(),
+				"changeReportID": reportResponse.ReportID,
+				"deletes":        len(deletes),
+				"creates":        len(creates),
+			},
+		).Info("Component change report published")
+	}
+
+	if len(creates) == 0 && len(updates) == 0 && len(deletes) == 0 {
+		s.logger.WithFields(
+			logrus.Fields{
+				"Server": serverID.String(),
+			},
+		).Info("No changes to be published")
+	}
+
+	return nil
 }

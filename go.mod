@@ -6,10 +6,11 @@ toolchain go1.23.2
 
 require (
 	github.com/banzaicloud/logrus-runtime-formatter v0.0.0-20190729070250-5ae5475bae5e
-	github.com/bmc-toolbox/bmclib/v2 v2.3.5-0.20250112195210-105a48afd7cf
+	github.com/bmc-toolbox/bmclib/v2 v2.3.5-0.20250117163502-d621fb6aeb76
 	github.com/bmc-toolbox/common v0.0.0-20250112191656-b6de52e8303d
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/emicklei/dot v1.6.2
 	github.com/equinix-labs/otel-init-go v0.0.9
 	github.com/google/uuid v1.6.0
@@ -17,8 +18,8 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jpillora/backoff v1.0.0
-	github.com/metal-automata/conditionorc v1.1.14-0.20241215142841-378ab7d28131
-	github.com/metal-automata/fleetdb v1.20.3-0.20250111152456-68916147fb25
+	github.com/metal-automata/conditionorc v1.1.14-0.20250121063718-6bc1c4530c33
+	github.com/metal-automata/fleetdb v1.20.4-0.20250122065241-d29b73af586b
 	github.com/metal-automata/ironlib v0.5.1
 	github.com/metal-automata/rivets v1.4.1-0.20241215143929-5c3c886b34ba
 	github.com/mitchellh/copystructure v1.2.0
@@ -54,7 +55,6 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dselans/dmidecode v0.0.0-20180814053009-65c3f9d81910 // indirect
 	github.com/ericlagergren/decimal v0.0.0-20240411145413-00de7ca16731 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -73,6 +73,7 @@ require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/slug v1.15.0 // indirect
@@ -141,7 +142,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.33.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.33.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
@@ -163,3 +163,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/metal-automata/fleetdb => ../fleetdb

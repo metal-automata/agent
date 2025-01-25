@@ -6,7 +6,6 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/google/uuid"
 	"github.com/metal-automata/agent/internal/model"
-	fleetdbapi "github.com/metal-automata/fleetdb/pkg/api/v1"
 	rctypes "github.com/metal-automata/rivets/condition"
 )
 
@@ -26,5 +25,5 @@ type Repository interface {
 	ConvertCommonDevice(serverID uuid.UUID, hw *common.Device, collectionMethod model.CollectionMethod, checkComponentSlug bool) (*rctypes.Server, error)
 
 	// Initialize or update component inventory
-	SetComponentInventory(ctx context.Context, serverID uuid.UUID, components fleetdbapi.ServerComponentSlice, initialized bool, method model.CollectionMethod) error
+	SetComponentInventory(ctx context.Context, serverID uuid.UUID, device *common.Device, method model.CollectionMethod) error
 }

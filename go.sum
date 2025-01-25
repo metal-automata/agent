@@ -113,9 +113,8 @@ github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+Ce
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
-github.com/bmc-toolbox/bmclib/v2 v2.3.2/go.mod h1:t8If/0fHQTRIK/yKDk2H3SgthDNNj+7z2aeftDFRFrU=
-github.com/bmc-toolbox/bmclib/v2 v2.3.5-0.20250112195210-105a48afd7cf h1:Yr04brc/us26vmXUkIoqmmBys6QySm7+gmW1jl93QQI=
-github.com/bmc-toolbox/bmclib/v2 v2.3.5-0.20250112195210-105a48afd7cf/go.mod h1:CTcPs01t7AzfC8q3hdqCAhsYLe8zxtUOKr3jC3e8OWc=
+github.com/bmc-toolbox/bmclib/v2 v2.3.5-0.20250117163502-d621fb6aeb76 h1:pf7IMgNxrNMWB4em2ENZ/UY0hQTwPM5GuSZ874mzBqg=
+github.com/bmc-toolbox/bmclib/v2 v2.3.5-0.20250117163502-d621fb6aeb76/go.mod h1:CTcPs01t7AzfC8q3hdqCAhsYLe8zxtUOKr3jC3e8OWc=
 github.com/bmc-toolbox/common v0.0.0-20250112191656-b6de52e8303d h1:5c0jhS9jNLm1t3GVEESsWv+p6recFRLGW90zp8HDIDs=
 github.com/bmc-toolbox/common v0.0.0-20250112191656-b6de52e8303d/go.mod h1:Cdnkm+edb6C0pVkyCrwh3JTXAe0iUF9diDG/DztPI9I=
 github.com/bombsimon/logrusr/v2 v2.0.1 h1:1VgxVNQMCvjirZIYaT9JYn6sAVGVEcNtRE0y4mvaOAM=
@@ -498,10 +497,8 @@ github.com/mattn/go-sqlite3 v1.14.22/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxU
 github.com/mattn/go-sqlite3 v2.0.1+incompatible h1:xQ15muvnzGBHpIpdrNi1DA5x0+TcBZzsIDwmw9uTHzw=
 github.com/mattn/go-sqlite3 v2.0.1+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/metal-automata/conditionorc v1.1.14-0.20241215142841-378ab7d28131 h1:oe+8fhRf+3yn5kn/K7ZaO/nVamT92cgxuoiznb+3B8A=
-github.com/metal-automata/conditionorc v1.1.14-0.20241215142841-378ab7d28131/go.mod h1:m2ABz0fcpT2s01RfNuVu/uNzyKtUHcM6bAu4kpWqIsk=
-github.com/metal-automata/fleetdb v1.20.3-0.20250111152456-68916147fb25 h1:XhXsHfpm2MsCyr02EVYRhrkwZ4DaWvr15VYRVNKx7nQ=
-github.com/metal-automata/fleetdb v1.20.3-0.20250111152456-68916147fb25/go.mod h1:N2lIVYhcnowTl1o8CZVm6Ra0gO2GDqLFiyfOsycR4No=
+github.com/metal-automata/conditionorc v1.1.14-0.20250121063718-6bc1c4530c33 h1:OFLLTwBFoSneiylo9b5xhsxTwRh1iFdjBlZINEHTxa8=
+github.com/metal-automata/conditionorc v1.1.14-0.20250121063718-6bc1c4530c33/go.mod h1:OStB33aymMFIS3T8GYL4cz8y/FfxhLT8naXAala9hzQ=
 github.com/metal-automata/ironlib v0.5.1 h1:hwP8Zmgt/0XnVrsdCtLI5DzwkAqq6kUSitPOD80oHtc=
 github.com/metal-automata/ironlib v0.5.1/go.mod h1:gII0T0gDHh/i6u2k3m+DNhSlE963OF4CA9GBwP0p9Es=
 github.com/metal-automata/rivets v1.4.1-0.20241215143929-5c3c886b34ba h1:0aa8PJYWRNGZG7rrdyv2BEvuGDLCVVqM7lkHERpINoM=

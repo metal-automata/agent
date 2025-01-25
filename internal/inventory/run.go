@@ -71,29 +71,17 @@ func (h *Handler) Run(ctx context.Context, genericTask *rctypes.Task[any, any], 
 			return err
 		}
 
-		var initialized bool
-		server, err := h.repository.AssetByID(ctx, task.Server.UUID.String())
-		if err != nil {
-			return err
-		}
-
-		if len(server.Components) != 0 {
-			initialized = true
-		}
-
-		convInventory, err := h.repository.ConvertCommonDevice(task.Server.UUID, collection.inventory, model.InstallMethodOutofband, true)
-		if err != nil {
-			return err
-		}
-
-		err = h.repository.SetComponentInventory(ctx, task.Server.UUID, convInventory.Components, initialized, model.InstallMethodOutofband)
-		if err != nil {
+		if errInv := h.repository.SetComponentInventory(
+			ctx,
+			task.Server.UUID,
+			collection.inventory,
+			model.InstallMethod(model.RunOutofband),
+		); errInv != nil {
 			return err
 		}
 	}
 
 	ctxLogger.Info("task for device completed")
-
 	return nil
 }
 
