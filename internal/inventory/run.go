@@ -20,7 +20,7 @@ var (
 
 type collection struct {
 	inventory *common.Device
-	biosCfg   map[string]string
+	biosCfg   map[string]string // nolint:unused // this is here for when it is to be implemented
 }
 
 type Handler struct {
@@ -119,6 +119,7 @@ func (h *Handler) initTask(ctx context.Context, genericTask *rctypes.Task[any, a
 		},
 	)
 
+	// nolint:gocritic // switch used for readability over if
 	switch task.Parameters.Method {
 	case rctypes.OutofbandInventory:
 		return task, model.RunOutofband, ctxLogger, nil

@@ -161,6 +161,12 @@ func (s *FleetDBAPI) ConvertCommonDevice(serverID uuid.UUID, hw *common.Device, 
 	return converter.FromCommonDevice(serverID, hw)
 }
 
+// Converts from the common.Device to the fleetdbapi.Server type with no slug validation
+func ConvertCommonDeviceNoSlugValidate(serverID uuid.UUID, hw *common.Device, collectionMethod model.InstallMethod) (*rctypes.Server, error) {
+	converter := fleetdbapi.NewComponentConverter(fleetdbapi.CollectionMethod(collectionMethod), nil, true)
+	return converter.FromCommonDevice(serverID, hw)
+}
+
 func (s *FleetDBAPI) registerErrorMetric(queryKind string) {
 	metrics.StoreQueryErrorCount.With(
 		prometheus.Labels{
@@ -415,6 +421,7 @@ func (s *FleetDBAPI) listServerComponentTypes(ctx context.Context) (fleetdbapi.S
 	return existing, nil
 }
 
+// nolint:gocyclo // all related bits in one place makes this easier to grok
 func (s *FleetDBAPI) SetComponentInventory(ctx context.Context, serverID uuid.UUID, device *common.Device, method model.CollectionMethod) error {
 	currentInventory, err := s.AssetByID(ctx, serverID.String())
 	if err != nil {
@@ -506,7 +513,6 @@ func (s *FleetDBAPI) SetComponentInventory(ctx context.Context, serverID uuid.UU
 				"updates": len(updates),
 			},
 		).Info("Component updates published")
-
 	}
 
 	if len(creates) > 0 || len(deletes) > 0 {

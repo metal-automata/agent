@@ -374,7 +374,7 @@ func TestPlanInstall_Inband(t *testing.T) {
 
 	serverID := uuid.MustParse("fa125199-e9dd-47d4-8667-ce1d26f58c4a")
 	taskID := uuid.MustParse("05c3296d-be5d-473a-b90c-4ce66cfdec65")
-	tasktaskHandlerCtx := &runner.TaskHandlerContext{
+	taskHandlerCtx := &runner.TaskHandlerContext{
 		Logger:    logger,
 		Publisher: runner.NewTaskStatusPublisher(logger, publisher),
 		Task: &model.FirmwareTask{
@@ -410,7 +410,7 @@ func TestPlanInstall_Inband(t *testing.T) {
 		Times(2).
 		Return(&ironlibm.UpdateRequirements{}, nil)
 
-	h := taskHandler{mode: model.RunInband, TaskHandlerContext: tasktaskHandlerCtx}
+	h := taskHandler{mode: model.RunInband, TaskHandlerContext: taskHandlerCtx}
 	actions, err := h.planInstallActions(context.Background(), fwSet)
 	require.NoError(t, err, "no errors returned")
 	require.Equal(t, 2, len(actions), "expect 2 actions")

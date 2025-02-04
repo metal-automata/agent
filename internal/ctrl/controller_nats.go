@@ -255,7 +255,7 @@ Loop:
 func (n *NatsController) processEvents(ctx context.Context) error {
 	for _, subject := range n.natsConfig.Consumer.SubscribeSubjects {
 		pullCtx, cancel := context.WithTimeout(ctx, n.pullEventTimeout)
-		defer cancel()
+		defer cancel() // nolint:gocritic // a fresh context with timeout for each message pull is required
 
 		errProcessEvent := errors.New(subject + " event process error")
 

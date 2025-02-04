@@ -10,8 +10,6 @@ import (
 	ironlibm "github.com/metal-automata/ironlib/model"
 )
 
-//go:generate mockgen -source model.go -destination=../fixtures/mock.go -package=fixtures
-
 // QueryorOutofband interface defines the out-of-band methods to query a device.
 //
 // This is common interface to the ironlib and bmclib libraries.

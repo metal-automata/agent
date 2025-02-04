@@ -31,6 +31,7 @@ func NewOutofbandHandler(facilityCode, controllerID string, repository store.Rep
 	}
 }
 
+// nolint:revive // TODO: fix up method and then purge nolint
 func (c *OutofbandHandler) Collect(ctx context.Context, task *model.InventoryTask) (*collection, error) {
 	queryor := outofband.NewDeviceQueryor(task.Server, c.logger)
 
@@ -52,18 +53,18 @@ func (c *OutofbandHandler) Collect(ctx context.Context, task *model.InventoryTas
 
 	// TODO: provide BIOS configuration storage in fleetdb
 	// collect BIOS configurations
-	//biosCfg, err := queryor.BiosConfiguration(ctx)
-	//if err != nil {
-	//	errB := collectionError("bioscfg", err)
-	//	c.logger.WithError(errB).Warn("bios configuration collection error")
-	//}
-
-	//collected.biosCfg = biosCfg
+	// biosCfg, err := queryor.BiosConfiguration(ctx)
+	// if err != nil {
+	// 	errB := collectionError("bioscfg", err)
+	// 	c.logger.WithError(errB).Warn("bios configuration collection error")
+	// }
+	// collected.biosCfg = biosCfg
 
 	return collected, nil
 }
 
 func collectionError(kind string, err error) error {
+	// nolint:err113 // dynamic error here defined on purpose
 	collectionErr := fmt.Errorf("error in %s collection", kind)
 
 	switch {

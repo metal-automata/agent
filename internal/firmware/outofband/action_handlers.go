@@ -78,6 +78,7 @@ var (
 	ErrInstalledVersionUnknown   = errors.New("installed version unknown")
 	ErrComponentNotFound         = errors.New("component not identified for firmware install")
 	ErrRequireHostPoweredOff     = errors.New("expected host to be powered off")
+	ErrInventory                 = errors.New("error in inventory collection")
 )
 
 type handler struct {
@@ -156,12 +157,16 @@ func (h *handler) installedEqualsExpected(ctx context.Context, component, expect
 		return err
 	}
 
+	if inv == nil {
+		return errors.Wrap(ErrInventory, "got nil")
+	}
+
 	h.logger.WithFields(
 		logrus.Fields{
 			"component": component,
 		}).Debug("Querying device inventory from BMC for current component firmware")
 
-	server, err := h.store.ConvertCommonDevice(h.task.Parameters.AssetID, inv, model.InstallMethodOutofband, false)
+	server, err := store.ConvertCommonDeviceNoSlugValidate(h.task.Parameters.AssetID, inv, model.InstallMethodOutofband)
 	if err != nil {
 		return err
 	}
@@ -184,7 +189,10 @@ func (h *handler) installedEqualsExpected(ctx context.Context, component, expect
 		)
 	}
 
-	installedVersion := found.InstalledFirmware.Version
+	var installedVersion string
+	if found.InstalledFirmware != nil {
+		installedVersion = found.InstalledFirmware.Version
+	}
 
 	h.logger.WithFields(
 		logrus.Fields{

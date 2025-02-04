@@ -42,10 +42,12 @@ func (s *StatusPublisher) Publish(ctx context.Context, task *model.FirmwareTask)
 		return err
 	}
 
-	// overwrite credentials before this gets written back to the repository
-	genericTask.Server.BMC.IPAddress = ""
-	genericTask.Server.BMC.Password = ""
-	genericTask.Server.BMC.Username = ""
+	if genericTask.Server.BMC != nil {
+		// overwrite credentials before this gets written back to the repository
+		genericTask.Server.BMC.IPAddress = ""
+		genericTask.Server.BMC.Password = ""
+		genericTask.Server.BMC.Username = ""
+	}
 
 	if err := s.cp.Publish(ctx, genericTask, false); err != nil {
 		err = errors.Wrap(ErrPublishStatus, err.Error())

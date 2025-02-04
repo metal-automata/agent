@@ -19,7 +19,7 @@ var (
 // Sleep, return if context is canceled
 func SleepInContext(ctx context.Context, t time.Duration) error {
 	// skip sleep in tests
-	if os.Getenv(EnvTesting) == "-1" {
+	if os.Getenv(EnvTesting) == "1" {
 		return nil
 	}
 

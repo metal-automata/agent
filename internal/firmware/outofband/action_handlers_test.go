@@ -26,8 +26,14 @@ func newTestActionCtx() *runner.ActionHandlerContext {
 		TaskHandlerContext: &runner.TaskHandlerContext{
 			Task: &model.FirmwareTask{
 				Parameters: &rctypes.FirmwareInstallTaskParameters{},
-				Server:     &rctypes.Server{},
-				State:      model.StateActive,
+				Server: &rctypes.Server{
+					BMC: &rctypes.BMC{
+						Username:  "foo",
+						Password:  "bar",
+						IPAddress: "127.0.0.1",
+					},
+				},
+				State: model.StateActive,
 			},
 			Logger: logrus.NewEntry(logrus.New()),
 		},
@@ -100,7 +106,6 @@ func TestCheckCurrentFirmware(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, "pound sand", err.Error())
 	})
-
 	t.Run("nil inventory", func(t *testing.T) {
 		t.Parallel()
 		handler, dq := init(t)
@@ -108,9 +113,8 @@ func TestCheckCurrentFirmware(t *testing.T) {
 		dq.EXPECT().Inventory(mock.Anything).Times(1).Return(nil, nil)
 		err := handler.checkCurrentFirmware(ctx)
 		require.Error(t, err)
-		//		require.ErrorIs(t, err, model.ErrComponentConverter)
+		require.ErrorIs(t, err, ErrInventory)
 	})
-
 	t.Run("bad component slug", func(t *testing.T) {
 		t.Parallel()
 		handler, dq := init(t)
@@ -125,7 +129,6 @@ func TestCheckCurrentFirmware(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrComponentNotFound)
 	})
-
 	t.Run("blank installed version", func(t *testing.T) {
 		t.Parallel()
 		debug := false
@@ -273,12 +276,12 @@ func TestPollFirmwareInstallStatus(t *testing.T) {
 		return ah.handler, m
 	}
 
+	os.Setenv(model.EnvTesting, "1")
+	defer os.Unsetenv(model.EnvTesting)
+
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			handler, m := init(t)
-
-			os.Setenv(model.EnvTesting, "1")
-			defer os.Unsetenv(model.EnvTesting)
 
 			m.EXPECT().FirmwareTaskStatus(
 				mock.Anything,

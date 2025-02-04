@@ -39,35 +39,36 @@ func (s *Client) Inventory(ctx context.Context) (*common.Device, error) {
 	return dm.GetInventory(ctx, iactions.WithDisabledCollectorUtilities(disabledCollectors))
 }
 
+// TODO: implement this method once the sandbox can pxe boot nodes
 // Inventory implements the Queryor interface to collect inventory inband.
 //
-//// The given asset object is updated with the collected information.
-//func (i *Queryor) Inventory(ctx context.Context, asset *model.Asset) error {
-//	if !i.mock {
-//		var err error
+// The given asset object is updated with the collected information.
+// func (i *Queryor) Inventory(ctx context.Context, asset *model.Asset) error {
+// 	if !i.mock {
+// 		var err error
 //
-//		i.deviceManager, err = ironlib.New(i.logger.Logger)
-//		if err != nil {
-//			return err
-//		}
-//	}
+// 		i.deviceManager, err = ironlib.New(i.logger.Logger)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
 //
-//	device, err := i.deviceManager.GetInventory(ctx)
-//	if err != nil {
-//		return err
-//	}
+// 	device, err := i.deviceManager.GetInventory(ctx)
+// 	if err != nil {
+// 		return err
+// 	}
 //
-//	device.Vendor = common.FormatVendorName(device.Vendor)
+// 	device.Vendor = common.FormatVendorName(device.Vendor)
 //
-//	// The "unknown" valued attributes here are to be filled in by the caller,
-//	// with the data from the inventory source when its available.
-//	asset.Inventory = device
-//	asset.Vendor = "unknown"
-//	asset.Model = "unknown"
-//	asset.Serial = "unknown"
+// 	// The "unknown" valued attributes here are to be filled in by the caller,
+// 	// with the data from the inventory source when its available.
+// 	asset.Inventory = device
+// 	asset.Vendor = "unknown"
+// 	asset.Model = "unknown"
+// 	asset.Serial = "unknown"
 //
-//	return nil
-//}
+// 	return nil
+// }
 
 func (s *Client) FirmwareInstall(ctx context.Context, component, vendor, model, _, updateFile string, force bool) error {
 	params := &ironlibm.UpdateOptions{
