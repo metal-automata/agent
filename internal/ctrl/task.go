@@ -104,6 +104,8 @@ func NewNatsConditionTaskRepository(
 			)
 		}
 
+		// NOTE!! reconsider the failure here, since the caller is unable to publish the condition
+		// status if this fails and it leaves everything related to the condition in a zombie state
 		if currTask.ID.String() != conditionID && !condition.StateIsComplete(currTask.State) {
 			msg := fmt.Sprintf(
 				"existing Task object %s in in-complete state, does not match ConditionID: %s, must be purged before proceeding",

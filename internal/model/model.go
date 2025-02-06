@@ -1,6 +1,8 @@
 package model
 
-import rctypes "github.com/metal-automata/rivets/condition"
+import (
+	rctypes "github.com/metal-automata/rivets/condition"
+)
 
 type (
 	AppKind   string
@@ -24,6 +26,21 @@ const (
 	LogLevelInfo  LogLevel = "info"
 	LogLevelDebug LogLevel = "debug"
 	LogLevelTrace LogLevel = "trace"
+
+	// envTesting is set by tests to '1' to skip sleeps and backoffs in the handlers.
+	//
+	// nolint:gosec // no gosec, this isn't a credential
+	EnvTesting = "ENV_TESTING"
+
+	// task states
+	//
+	// states the task state machine transitions through
+	StatePending   = rctypes.Pending
+	StateActive    = rctypes.Active
+	StateSucceeded = rctypes.Succeeded
+	StateFailed    = rctypes.Failed
+
+	TaskDataStructVersion = "1.0"
 )
 
 // Returns the Conditions supported by this agent

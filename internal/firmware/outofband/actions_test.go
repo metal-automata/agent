@@ -9,7 +9,6 @@ import (
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/model"
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -19,9 +18,9 @@ func TestComposeAction(t *testing.T) {
 	newTestActionCtx := func() *runner.ActionHandlerContext {
 		return &runner.ActionHandlerContext{
 			TaskHandlerContext: &runner.TaskHandlerContext{
-				Task: &model.Task{
+				Task: &model.FirmwareTask{
 					Parameters: &rctypes.FirmwareInstallTaskParameters{},
-					Server:     &rtypes.Server{},
+					Server:     &rctypes.Server{},
 				},
 				Logger: logrus.NewEntry(logrus.New()),
 			},

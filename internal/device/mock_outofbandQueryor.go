@@ -26,6 +26,64 @@ func (_m *MockOutofbandQueryor) EXPECT() *MockOutofbandQueryor_Expecter {
 	return &MockOutofbandQueryor_Expecter{mock: &_m.Mock}
 }
 
+// BiosConfiguration provides a mock function with given fields: ctx
+func (_m *MockOutofbandQueryor) BiosConfiguration(ctx context.Context) (map[string]string, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BiosConfiguration")
+	}
+
+	var r0 map[string]string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (map[string]string, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) map[string]string); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockOutofbandQueryor_BiosConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BiosConfiguration'
+type MockOutofbandQueryor_BiosConfiguration_Call struct {
+	*mock.Call
+}
+
+// BiosConfiguration is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *MockOutofbandQueryor_Expecter) BiosConfiguration(ctx interface{}) *MockOutofbandQueryor_BiosConfiguration_Call {
+	return &MockOutofbandQueryor_BiosConfiguration_Call{Call: _e.mock.On("BiosConfiguration", ctx)}
+}
+
+func (_c *MockOutofbandQueryor_BiosConfiguration_Call) Run(run func(ctx context.Context)) *MockOutofbandQueryor_BiosConfiguration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *MockOutofbandQueryor_BiosConfiguration_Call) Return(_a0 map[string]string, _a1 error) *MockOutofbandQueryor_BiosConfiguration_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockOutofbandQueryor_BiosConfiguration_Call) RunAndReturn(run func(context.Context) (map[string]string, error)) *MockOutofbandQueryor_BiosConfiguration_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Close provides a mock function with given fields: ctx
 func (_m *MockOutofbandQueryor) Close(ctx context.Context) error {
 	ret := _m.Called(ctx)

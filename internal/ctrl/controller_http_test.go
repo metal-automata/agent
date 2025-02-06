@@ -8,16 +8,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	orc "github.com/metal-automata/conditionorc/pkg/api/v1/orchestrator/client"
+
 	"github.com/metal-automata/conditionorc/pkg/api/v1/orchestrator/types"
 	"github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
+
+	orc "github.com/metal-automata/conditionorc/pkg/api/v1/orchestrator/client"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 func TestRunTaskWithMonitor(t *testing.T) {
@@ -32,7 +34,7 @@ func TestRunTaskWithMonitor(t *testing.T) {
 		ID:     conditionID,
 		Kind:   conditionKind,
 		State:  condition.Pending,
-		Server: &rtypes.Server{ID: serverID.String()},
+		Server: &rctypes.Server{UUID: serverID},
 	}
 
 	testcases := []struct {

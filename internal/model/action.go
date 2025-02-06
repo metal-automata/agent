@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 )
 
 const (
@@ -27,7 +26,7 @@ type Action struct {
 	BMCTaskID string `json:"bmc_task_id,omitempty"`
 
 	// Set to the component identified as the target of the firmware install
-	Component *rtypes.Component `json:"component"`
+	Component *rctypes.Component `json:"component"`
 
 	// Method of install
 	InstallMethod InstallMethod `json:"install_method"`

@@ -64,28 +64,28 @@ func (h *Handler) Run(ctx context.Context, genericTask *rctypes.Task[any, any], 
 	return nil
 }
 
-func (h *Handler) initTask(ctx context.Context, genericTask *rctypes.Task[any, any], l *logrus.Logger) (*model.Task, model.RunMode, *logrus.Entry, error) {
+func (h *Handler) initTask(ctx context.Context, genericTask *rctypes.Task[any, any], l *logrus.Logger) (*model.FirmwareTask, model.RunMode, *logrus.Entry, error) {
 	// prepare new logger for handler
 	logger := logrus.New()
 	logger.Formatter = l.Formatter
 	logger.Level = l.Level
 
-	task, err := model.CopyAsFwInstallTask(genericTask)
+	task, err := model.CopyAsFirmwareTask(genericTask)
 	if err != nil {
 		return nil, "", nil, errors.Wrap(model.ErrInitTask, err.Error())
 	}
 
 	switch task.Kind {
 	case rctypes.FirmwareInstall:
-		// fetch asset inventory from inventory store
+		// fetch server inventory from inventory store
 		//
 		// TODO: remove this lookup
-		asset, err := h.repository.AssetByID(ctx, task.Parameters.AssetID.String())
+		server, err := h.repository.AssetByID(ctx, task.Parameters.AssetID.String())
 		if err != nil {
 			return nil, "", nil, errors.Wrap(model.ErrInitTask, err.Error())
 		}
 
-		task.Server = asset
+		task.Server = server
 		task.FacilityCode = h.facilityCode
 		task.WorkerID = h.controllerID
 
@@ -93,8 +93,8 @@ func (h *Handler) initTask(ctx context.Context, genericTask *rctypes.Task[any, a
 			logrus.Fields{
 				"conditionID":  task.ID.String(),
 				"controllerID": h.controllerID,
-				"assetID":      asset.ID,
-				"bmc":          asset.BMCAddress,
+				"serverID":     server.UUID.String(),
+				"bmc":          server.BMC.IPAddress,
 			},
 		)
 
@@ -104,7 +104,7 @@ func (h *Handler) initTask(ctx context.Context, genericTask *rctypes.Task[any, a
 		ctxLogger := l.WithFields(
 			logrus.Fields{
 				"conditionID": task.ID.String(),
-				"serverID":    task.Server.ID,
+				"serverID":    task.Server.UUID.String(),
 			},
 		)
 

@@ -26,8 +26,8 @@ type TaskHandler interface {
 	Initialize(ctx context.Context) error
 	Query(ctx context.Context) error
 	PlanActions(ctx context.Context) error
-	OnSuccess(ctx context.Context, task *model.Task)
-	OnFailure(ctx context.Context, task *model.Task)
+	OnSuccess(ctx context.Context, task *model.FirmwareTask)
+	OnFailure(ctx context.Context, task *model.FirmwareTask)
 	Publish(ctx context.Context)
 }
 
@@ -37,7 +37,7 @@ type TaskHandlerContext struct {
 	Publisher Publisher
 
 	// The task this action belongs to
-	Task *model.Task
+	Task *model.FirmwareTask
 
 	// Logger is the task, action handler logger.
 	Logger *logrus.Entry
@@ -75,7 +75,7 @@ func New(logger *logrus.Entry) *Runner {
 	}
 }
 
-func (r *Runner) RunTask(ctx context.Context, task *model.Task, handler TaskHandler) error {
+func (r *Runner) RunTask(ctx context.Context, task *model.FirmwareTask, handler TaskHandler) error {
 	// nolint:govet // struct field optimization not required
 	funcs := []struct {
 		name   string
@@ -153,7 +153,7 @@ func (r *Runner) RunTask(ctx context.Context, task *model.Task, handler TaskHand
 	return taskSuccess()
 }
 
-func (r *Runner) runActions(ctx context.Context, task *model.Task, handler TaskHandler) error {
+func (r *Runner) runActions(ctx context.Context, task *model.FirmwareTask, handler TaskHandler) error {
 	registerMetric := func(startTS time.Time, action *model.Action, state rctypes.State) {
 		registerActionMetric(startTS, action, string(state))
 	}
@@ -272,7 +272,7 @@ func (r *Runner) resumeAction(ctx context.Context, action *model.Action, handler
 	}
 }
 
-func (r *Runner) runActionSteps(ctx context.Context, task *model.Task, action *model.Action, handler TaskHandler, logger *logrus.Entry) (proceed bool, err error) {
+func (r *Runner) runActionSteps(ctx context.Context, task *model.FirmwareTask, action *model.Action, handler TaskHandler, logger *logrus.Entry) (proceed bool, err error) {
 	// helper func to log and publish step status
 	publish := func(state rctypes.State, action *model.Action, step *model.Step, logger *logrus.Entry) {
 		logger.WithField("step", step.Name).Debug("running step")
@@ -404,7 +404,7 @@ func (r *Runner) resumeStep(step *model.Step, logger *logrus.Entry) (resume bool
 }
 
 // conditionalFault is invoked before each runner method to induce a fault if specified
-func (r *Runner) conditionalFault(ctx context.Context, fname string, task *model.Task, handler TaskHandler) error {
+func (r *Runner) conditionalFault(ctx context.Context, fname string, task *model.FirmwareTask, handler TaskHandler) error {
 	var errConditionFault = errors.New("condition induced fault")
 
 	if task.Fault == nil {

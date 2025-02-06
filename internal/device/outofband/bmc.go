@@ -8,16 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmc-toolbox/common"
+	"github.com/metal-automata/agent/internal/device"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-
-	"github.com/bmc-toolbox/common"
-	"github.com/metal-automata/agent/internal/device"
-	"github.com/sirupsen/logrus"
-
-	rtypes "github.com/metal-automata/rivets/types"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 var (
@@ -53,17 +51,17 @@ var (
 type bmc struct {
 	client             *bmclib.Client
 	logger             *logrus.Entry
-	asset              *rtypes.Server
+	server             *rctypes.Server
 	installProvider    string
 	availableProviders []string
 }
 
 // NewDeviceQueryor returns a bmc queryor that implements the DeviceQueryor interface
-func NewDeviceQueryor(ctx context.Context, asset *rtypes.Server, logger *logrus.Entry) device.OutofbandQueryor {
+func NewDeviceQueryor(server *rctypes.Server, logger *logrus.Entry) device.OutofbandQueryor {
 	return &bmc{
-		client: newBmclibv2Client(ctx, asset, logger),
+		client: newBmclibv2Client(server, logger),
 		logger: logger,
-		asset:  asset,
+		server: server,
 	}
 }
 
@@ -94,8 +92,8 @@ func (b *bmc) tracelog() {
 
 	b.logger.WithFields(
 		logrus.Fields{
-			"asset.Vendor":         b.asset.Vendor,
-			"asset.Model":          b.asset.Model,
+			"server.Vendor":        b.server.Vendor,
+			"server.Model":         b.server.Model,
 			"attemptedProviders":   strings.Join(b.client.GetMetadata().ProvidersAttempted, ","),
 			"successfulProvider":   b.client.GetMetadata().SuccessfulProvider,
 			"successfulOpens":      strings.Join(b.client.GetMetadata().SuccessfulOpenConns, ","),
@@ -104,8 +102,8 @@ func (b *bmc) tracelog() {
 		}).Trace(funcName + ": connection metadata")
 }
 
-func (b *bmc) ReinitializeClient(ctx context.Context) {
-	newclient := newBmclibv2Client(ctx, b.asset, b.logger)
+func (b *bmc) ReinitializeClient(context.Context) {
+	newclient := newBmclibv2Client(b.server, b.logger)
 	b.client = newclient
 
 	b.logger.WithFields(
@@ -341,4 +339,18 @@ func (b *bmc) FirmwareInstallUploaded(ctx context.Context, component, uploadVeri
 
 	defer b.tracelog()
 	return b.with(provider).FirmwareInstallUploaded(installCtx, component, uploadVerifyTaskID)
+}
+
+func (b *bmc) BiosConfiguration(ctx context.Context) (map[string]string, error) {
+	err := b.Open(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := b.provider()
+	if err != nil {
+		return nil, errors.Wrap(ErrQueryorMethod, "BiosConfiguration: "+err.Error())
+	}
+
+	return b.with(provider).GetBiosConfiguration(ctx)
 }

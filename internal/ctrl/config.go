@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/metal-automata/rivets/condition"
 	"github.com/metal-automata/rivets/events"
 )
 
@@ -11,13 +12,21 @@ const (
 	subjectPrefix = "com.hollow.sh.controllers.commands"
 )
 
-func queueConfig(appName, facilityCode, natsURL, credsFile string) events.NatsOptions {
-	// com.hollow.sh.controllers.commands.sandbox.servers.*
-	consumerSubject := fmt.Sprintf(
-		"%s.%s.servers.*",
-		subjectPrefix,
-		facilityCode,
-	)
+func queueConfig(appName, facilityCode, natsURL, credsFile string, conditionKinds []condition.Kind) events.NatsOptions {
+	consumerSubjects := []string{}
+	for _, kind := range conditionKinds {
+		// prepare consumer subjects
+		sub := fmt.Sprintf(
+			// com.hollow.sh.controllers.commands.sandbox.servers.
+			// "%s.%s.servers.>",
+			"%s.%s.servers.%s",
+			subjectPrefix,
+			facilityCode,
+			kind,
+		)
+
+		consumerSubjects = append(consumerSubjects, sub)
+	}
 
 	return events.NatsOptions{
 		URL:            natsURL,
@@ -40,8 +49,8 @@ func queueConfig(appName, facilityCode, natsURL, credsFile string) events.NatsOp
 			MaxAckPending:     10,
 			Name:              fmt.Sprintf("%s-%s", facilityCode, appName),
 			QueueGroup:        appName,
-			FilterSubject:     consumerSubject,
-			SubscribeSubjects: []string{consumerSubject},
+			FilterSubject:     "placeholder",
+			SubscribeSubjects: consumerSubjects,
 		},
 		KVReplicationFactor: 3,
 	}

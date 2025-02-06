@@ -9,17 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	orc "github.com/metal-automata/conditionorc/pkg/api/v1/orchestrator/client"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"golang.org/x/oauth2/clientcredentials"
-
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/google/uuid"
+	"github.com/metal-automata/agent/internal/model"
 	"github.com/metal-automata/rivets/condition"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2/clientcredentials"
+
+	orc "github.com/metal-automata/conditionorc/pkg/api/v1/orchestrator/client"
 )
 
 const (
@@ -300,7 +301,7 @@ func (n *HTTPController) runTaskWithMonitor(
 		logrus.Fields{
 			"taskID":   task.ID,
 			"state":    task.State,
-			"serverID": task.Server.ID,
+			"serverID": task.Server.UUID.String(),
 			"kind":     task.Kind,
 		},
 	)
@@ -354,22 +355,13 @@ func (n *HTTPController) runTaskWithMonitor(
 	return nil
 }
 
-func sleepWithContext(ctx context.Context, t time.Duration) error {
-	select {
-	case <-time.After(t):
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	}
-}
-
 func (n *HTTPController) fetchTaskWithRetries(ctx context.Context, serverID uuid.UUID, tries int, interval time.Duration) (*condition.Task[any, any], error) {
 	for attempt := 0; attempt <= tries; attempt++ {
 		le := n.logger.WithField("attempt", fmt.Sprintf("%d/%d", attempt, tries))
 
 		if attempt > 0 {
 			// returns error on context cancellation
-			if errSleep := sleepWithContext(ctx, interval); errSleep != nil {
+			if errSleep := model.SleepInContext(ctx, interval); errSleep != nil {
 				return nil, errSleep
 			}
 		}

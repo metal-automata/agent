@@ -69,7 +69,7 @@ func (_c *MockTaskHandler_Initialize_Call) RunAndReturn(run func(context.Context
 }
 
 // OnFailure provides a mock function with given fields: ctx, task
-func (_m *MockTaskHandler) OnFailure(ctx context.Context, task *model.Task) {
+func (_m *MockTaskHandler) OnFailure(ctx context.Context, task *model.FirmwareTask) {
 	_m.Called(ctx, task)
 }
 
@@ -80,14 +80,14 @@ type MockTaskHandler_OnFailure_Call struct {
 
 // OnFailure is a helper method to define mock.On call
 //   - ctx context.Context
-//   - task *model.Task
+//   - task *model.FirmwareTask
 func (_e *MockTaskHandler_Expecter) OnFailure(ctx interface{}, task interface{}) *MockTaskHandler_OnFailure_Call {
 	return &MockTaskHandler_OnFailure_Call{Call: _e.mock.On("OnFailure", ctx, task)}
 }
 
-func (_c *MockTaskHandler_OnFailure_Call) Run(run func(ctx context.Context, task *model.Task)) *MockTaskHandler_OnFailure_Call {
+func (_c *MockTaskHandler_OnFailure_Call) Run(run func(ctx context.Context, task *model.FirmwareTask)) *MockTaskHandler_OnFailure_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*model.Task))
+		run(args[0].(context.Context), args[1].(*model.FirmwareTask))
 	})
 	return _c
 }
@@ -97,13 +97,13 @@ func (_c *MockTaskHandler_OnFailure_Call) Return() *MockTaskHandler_OnFailure_Ca
 	return _c
 }
 
-func (_c *MockTaskHandler_OnFailure_Call) RunAndReturn(run func(context.Context, *model.Task)) *MockTaskHandler_OnFailure_Call {
+func (_c *MockTaskHandler_OnFailure_Call) RunAndReturn(run func(context.Context, *model.FirmwareTask)) *MockTaskHandler_OnFailure_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // OnSuccess provides a mock function with given fields: ctx, task
-func (_m *MockTaskHandler) OnSuccess(ctx context.Context, task *model.Task) {
+func (_m *MockTaskHandler) OnSuccess(ctx context.Context, task *model.FirmwareTask) {
 	_m.Called(ctx, task)
 }
 
@@ -114,14 +114,14 @@ type MockTaskHandler_OnSuccess_Call struct {
 
 // OnSuccess is a helper method to define mock.On call
 //   - ctx context.Context
-//   - task *model.Task
+//   - task *model.FirmwareTask
 func (_e *MockTaskHandler_Expecter) OnSuccess(ctx interface{}, task interface{}) *MockTaskHandler_OnSuccess_Call {
 	return &MockTaskHandler_OnSuccess_Call{Call: _e.mock.On("OnSuccess", ctx, task)}
 }
 
-func (_c *MockTaskHandler_OnSuccess_Call) Run(run func(ctx context.Context, task *model.Task)) *MockTaskHandler_OnSuccess_Call {
+func (_c *MockTaskHandler_OnSuccess_Call) Run(run func(ctx context.Context, task *model.FirmwareTask)) *MockTaskHandler_OnSuccess_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*model.Task))
+		run(args[0].(context.Context), args[1].(*model.FirmwareTask))
 	})
 	return _c
 }
@@ -131,7 +131,7 @@ func (_c *MockTaskHandler_OnSuccess_Call) Return() *MockTaskHandler_OnSuccess_Ca
 	return _c
 }
 
-func (_c *MockTaskHandler_OnSuccess_Call) RunAndReturn(run func(context.Context, *model.Task)) *MockTaskHandler_OnSuccess_Call {
+func (_c *MockTaskHandler_OnSuccess_Call) RunAndReturn(run func(context.Context, *model.FirmwareTask)) *MockTaskHandler_OnSuccess_Call {
 	_c.Call.Return(run)
 	return _c
 }

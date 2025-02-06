@@ -87,7 +87,7 @@ func NewNatsController(
 
 	hostname, _ := os.Hostname()
 
-	queueCfg := queueConfig(appName, facilityCode, natsURL, credsFile)
+	queueCfg := queueConfig(appName, facilityCode, natsURL, credsFile, conditionKinds)
 	nwp := &NatsController{
 		hostname:          hostname,
 		facilityCode:      facilityCode,
@@ -236,10 +236,6 @@ Loop:
 	for {
 		select {
 		case <-pullTicker.C:
-			if n.concurrencyLimit() {
-				continue
-			}
-
 			if err := n.processEvents(ctx); err != nil {
 				return errors.Wrap(errListenEvents, err.Error())
 			}
@@ -257,39 +253,41 @@ Loop:
 
 // process event into a condition
 func (n *NatsController) processEvents(ctx context.Context) error {
-	pullCtx, cancel := context.WithTimeout(ctx, n.pullEventTimeout)
-	defer cancel()
+	for _, subject := range n.natsConfig.Consumer.SubscribeSubjects {
+		pullCtx, cancel := context.WithTimeout(ctx, n.pullEventTimeout)
+		defer cancel() // nolint:gocritic // a fresh context with timeout for each message pull is required
 
-	errProcessEvent := errors.New("process event error")
-	msgs, err := n.stream.PullMsg(pullCtx, 1)
-	switch {
-	case err == nil:
-	case errors.Is(err, nats.ErrTimeout):
-		n.logger.WithFields(
-			logrus.Fields{"info": err.Error()},
-		).Trace("no new events")
-		return nil
+		errProcessEvent := errors.New(subject + " event process error")
 
-	default:
-		n.logger.WithFields(
-			logrus.Fields{"err": err.Error()},
-		).Warn("retrieving new messages")
-
-		metricsNATSError("pull-msg")
-		return errors.Wrap(errProcessEvent, err.Error())
-	}
-
-	for _, msg := range msgs {
-		if n.concurrencyLimit() {
+		msg, err := n.stream.PullOneMsg(pullCtx, subject)
+		switch {
+		case err == nil:
+		case errors.Is(err, context.DeadlineExceeded), errors.Is(err, nats.ErrTimeout), errors.Is(err, events.ErrNatsMsgPull):
+			n.logger.WithFields(
+				logrus.Fields{"info": err.Error()},
+			).Trace("no new events")
 			return nil
+
+		default:
+			n.logger.WithFields(
+				logrus.Fields{"err": err.Error()},
+			).Warn("retrieving new messages")
+
+			metricsNATSError("pull-msg")
+			return errors.Wrap(errProcessEvent, err.Error())
 		}
 
 		// event status setter to keep the JS updated on our progress
 		eventAcknowleger := n.newNatsEventStatusAcknowleger(msg)
 
+		// check concurrent threshold
+		if n.concurrencyLimit() {
+			eventAcknowleger.nak()
+			return nil
+		}
+
 		if ctx.Err() != nil {
 			eventAcknowleger.nak()
-
 			return errors.Wrap(errProcessEvent, ctx.Err().Error())
 		}
 
@@ -372,6 +370,14 @@ func (n *NatsController) processConditionFromEvent(ctx context.Context, msg even
 
 	// check current state is finalized
 	if n.stateFinalized(ctx, cond, conditionStatusQueryor, eventAcknowleger) {
+		n.logger.WithFields(
+			logrus.Fields{
+				"conditionID": cond.ID.String(),
+				"state":       cond.State,
+				"updated":     cond.UpdatedAt.Local().String(),
+			},
+		).Info("condition in final state, nothing to do here")
+
 		return
 	}
 
@@ -555,6 +561,15 @@ func (n *NatsController) processCondition(
 
 	errHandler := n.runTaskHandlerWithMonitor(handlerCtx, task, publisher, statusInterval)
 	if errHandler != nil {
+		task.Status.Append(errHandler.Error())
+		task.State = condition.Failed
+		if err := publisher.Publish(ctx, task, false); err != nil {
+			msg := "final failed task status publish failure"
+			n.logger.WithError(err).WithFields(logrus.Fields{
+				"conditionID": cond.ID.String(),
+			}).Error(msg)
+		}
+
 		registerConditionRuntimeMetric(startTS, string(condition.Failed))
 
 		// handler indicates this must be retried
@@ -571,6 +586,16 @@ func (n *NatsController) processCondition(
 			n.ID(),
 			"condition completed with errors: "+errHandler.Error(),
 		)
+
+		return
+	}
+
+	task.State = condition.Succeeded
+	if err := publisher.Publish(ctx, task, false); err != nil {
+		msg := "error publishing final status record"
+		n.logger.WithError(err).WithFields(logrus.Fields{
+			"conditionID": cond.ID.String(),
+		}).Error(msg)
 
 		return
 	}
