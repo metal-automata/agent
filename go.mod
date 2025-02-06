@@ -19,7 +19,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jpillora/backoff v1.0.0
 	github.com/metal-automata/conditionorc v1.1.14-0.20250121063718-6bc1c4530c33
-	github.com/metal-automata/fleetdb v1.20.5-0.20250204064745-0951890db0c5
+	github.com/metal-automata/fleetdb v1.20.5-0.20250206062329-8fa8832c6bec
 	github.com/metal-automata/ironlib v0.5.1
 	github.com/metal-automata/rivets v1.4.1-0.20250204064847-15ad7979f572
 	github.com/mitchellh/copystructure v1.2.0
