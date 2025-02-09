@@ -44,6 +44,9 @@ type OutofbandQueryor interface {
 
 	// BiosConfiguration retrieves the bios configuration for the device
 	BiosConfiguration(ctx context.Context) (map[string]string, error)
+
+	// Set boot device order
+	SetBootDevice(ctx context.Context, device string, persistent, efiBoot bool) error
 }
 
 type InbandQueryor interface {

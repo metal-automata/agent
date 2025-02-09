@@ -525,6 +525,7 @@ func (n *NatsController) processCondition(
 	//
 	// failure to publish the first status KV record is fatal
 	task := condition.NewTaskFromCondition(cond)
+	task.State = condition.Active
 	task.Status = condition.NewTaskStatusRecord("In process by controller: " + n.hostname)
 
 	// default trace, span IDs to controller context

@@ -669,6 +669,55 @@ func (_c *MockOutofbandQueryor_ResetBMC_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
+// SetBootDevice provides a mock function with given fields: ctx, device, persistent, efiBoot
+func (_m *MockOutofbandQueryor) SetBootDevice(ctx context.Context, device string, persistent bool, efiBoot bool) error {
+	ret := _m.Called(ctx, device, persistent, efiBoot)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetBootDevice")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, bool, bool) error); ok {
+		r0 = rf(ctx, device, persistent, efiBoot)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockOutofbandQueryor_SetBootDevice_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetBootDevice'
+type MockOutofbandQueryor_SetBootDevice_Call struct {
+	*mock.Call
+}
+
+// SetBootDevice is a helper method to define mock.On call
+//   - ctx context.Context
+//   - device string
+//   - persistent bool
+//   - efiBoot bool
+func (_e *MockOutofbandQueryor_Expecter) SetBootDevice(ctx interface{}, device interface{}, persistent interface{}, efiBoot interface{}) *MockOutofbandQueryor_SetBootDevice_Call {
+	return &MockOutofbandQueryor_SetBootDevice_Call{Call: _e.mock.On("SetBootDevice", ctx, device, persistent, efiBoot)}
+}
+
+func (_c *MockOutofbandQueryor_SetBootDevice_Call) Run(run func(ctx context.Context, device string, persistent bool, efiBoot bool)) *MockOutofbandQueryor_SetBootDevice_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(bool), args[3].(bool))
+	})
+	return _c
+}
+
+func (_c *MockOutofbandQueryor_SetBootDevice_Call) Return(_a0 error) *MockOutofbandQueryor_SetBootDevice_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockOutofbandQueryor_SetBootDevice_Call) RunAndReturn(run func(context.Context, string, bool, bool) error) *MockOutofbandQueryor_SetBootDevice_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SetPowerState provides a mock function with given fields: ctx, state
 func (_m *MockOutofbandQueryor) SetPowerState(ctx context.Context, state string) error {
 	ret := _m.Called(ctx, state)

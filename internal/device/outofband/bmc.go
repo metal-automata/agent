@@ -213,6 +213,22 @@ func (b *bmc) ResetBMC(ctx context.Context) error {
 	return err
 }
 
+// Set boot device order
+func (b *bmc) SetBootDevice(ctx context.Context, target string, persistent, efiBoot bool) error {
+	if err := b.Open(ctx); err != nil {
+		return err
+	}
+
+	provider, err := b.provider()
+	if err != nil {
+		return errors.Wrap(ErrQueryorMethod, "SetBootDevice: "+err.Error())
+	}
+
+	defer b.tracelog()
+	_, err = b.with(provider).SetBootDevice(ctx, target, persistent, efiBoot)
+	return err
+}
+
 // Inventory queries the BMC for the device inventory and returns an object with the device inventory.
 func (b *bmc) Inventory(ctx context.Context) (*common.Device, error) {
 	if err := b.Open(ctx); err != nil {
