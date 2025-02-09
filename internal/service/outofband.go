@@ -7,13 +7,13 @@ import (
 	"github.com/metal-automata/agent/internal/firmware"
 	"github.com/metal-automata/agent/internal/inventory"
 	"github.com/metal-automata/agent/internal/model"
+	"github.com/metal-automata/agent/internal/servercontrol"
 	"github.com/metal-automata/agent/internal/store"
 	"github.com/metal-automata/agent/internal/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/metal-automata/agent/internal/ctrl"
 	rctypes "github.com/metal-automata/rivets/condition"
 )
@@ -101,9 +101,7 @@ func (h *OobConditionTaskHandler) HandleTask(
 			publisher,
 		)
 
-		if err := fwHandler.Run(ctx, genericTask, h.logger); err != nil {
-			return err
-		}
+		return fwHandler.Run(ctx, genericTask, h.logger)
 
 	case rctypes.Inventory:
 		invHandler := inventory.NewHandler(
@@ -113,14 +111,19 @@ func (h *OobConditionTaskHandler) HandleTask(
 			publisher,
 		)
 
-		if err := invHandler.Run(ctx, genericTask, h.logger); err != nil {
-			spew.Dump(err)
-			return err
-		}
+		return invHandler.Run(ctx, genericTask, h.logger)
+
+	case rctypes.ServerControl:
+		scHandler := servercontrol.NewHandler(
+			h.facilityCode,
+			h.controllerID,
+			h.store,
+			publisher,
+		)
+
+		return scHandler.Run(ctx, genericTask, h.logger)
 
 	default:
 		return errors.Wrap(model.ErrInitTask, "unsupport task kind: "+string(genericTask.Kind))
 	}
-
-	return nil
 }
