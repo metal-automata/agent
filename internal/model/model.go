@@ -48,6 +48,7 @@ func ConditionKinds() []rctypes.Kind {
 	return []rctypes.Kind{
 		rctypes.Inventory,
 		rctypes.FirmwareInstall,
+		rctypes.ServerControl,
 	}
 }
 

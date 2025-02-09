@@ -9,17 +9,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Inventory method is one of 'outofband' OR 'inband'
-type InventoryMethod string
+// Alias parameterized model.ServerControlTask
+type ServerControlTask rctypes.Task[*rctypes.ServerControlTaskParameters, json.RawMessage]
 
-// Alias parameterized model.InventoryTask
-type InventoryTask rctypes.Task[*rctypes.InventoryTaskParameters, any]
-
-func (t *InventoryTask) SetState(s rctypes.State) {
+func (t *ServerControlTask) SetState(s rctypes.State) {
 	t.State = s
 }
 
-func (t *InventoryTask) MustMarshal() json.RawMessage {
+func (t *ServerControlTask) MustMarshal() json.RawMessage {
 	b, err := json.Marshal(t)
 	if err != nil {
 		panic(err)
@@ -28,7 +25,7 @@ func (t *InventoryTask) MustMarshal() json.RawMessage {
 	return b
 }
 
-func (t *InventoryTask) CopyAsGenericTask() (*rctypes.Task[any, any], error) {
+func (t *ServerControlTask) CopyAsGenericTask() (*rctypes.Task[any, any], error) {
 	errTaskConv := errors.New("error in inventory Task conversion")
 
 	paramsJSON, err := t.Parameters.Marshal()
@@ -66,20 +63,20 @@ func (t *InventoryTask) CopyAsGenericTask() (*rctypes.Task[any, any], error) {
 	}, nil
 }
 
-func convInventoryTaskParams(params any) (*rctypes.InventoryTaskParameters, error) {
+func convServerControlTaskParams(params any) (*rctypes.ServerControlTaskParameters, error) {
 	errParamsConv := errors.New("error in Task.Parameters conversion")
 
-	invParams := &rctypes.InventoryTaskParameters{}
+	scParams := &rctypes.ServerControlTaskParameters{}
 	switch v := params.(type) {
 	// When unpacked from a http request by the condition orc client,
 	// Parameters are of this type.
 	case map[string]interface{}:
-		if err := invParams.MapStringInterfaceToStruct(v); err != nil {
+		if err := scParams.MapStringInterfaceToStruct(v); err != nil {
 			return nil, errors.Wrap(errParamsConv, err.Error())
 		}
 	// When received over NATS its of this type.
 	case json.RawMessage:
-		if err := invParams.Unmarshal(v); err != nil {
+		if err := scParams.Unmarshal(v); err != nil {
 			return nil, errors.Wrap(errParamsConv, err.Error())
 		}
 	default:
@@ -87,13 +84,13 @@ func convInventoryTaskParams(params any) (*rctypes.InventoryTaskParameters, erro
 		return nil, errors.Wrap(errParamsConv, msg)
 	}
 
-	return invParams, nil
+	return scParams, nil
 }
 
-func CopyAsInventoryTask(task *rctypes.Task[any, any]) (*InventoryTask, error) {
+func CopyAsServerControlTask(task *rctypes.Task[any, any]) (*ServerControlTask, error) {
 	errTaskConv := errors.New("error in generic Task conversion")
 
-	params, err := convInventoryTaskParams(task.Parameters)
+	params, err := convServerControlTaskParams(task.Parameters)
 	if err != nil {
 		return nil, errors.Wrap(errTaskConv, err.Error())
 	}
@@ -109,7 +106,7 @@ func CopyAsInventoryTask(task *rctypes.Task[any, any]) (*InventoryTask, error) {
 		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Fault")
 	}
 
-	return &InventoryTask{
+	return &ServerControlTask{
 		StructVersion: task.StructVersion,
 		ID:            task.ID,
 		Kind:          task.Kind,
