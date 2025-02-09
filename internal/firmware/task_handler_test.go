@@ -16,10 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
-	"github.com/bmc-toolbox/common"
 	ironlibm "github.com/metal-automata/ironlib/model"
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 )
 
 func TestSortFirmwareByInstallOrder(t *testing.T) {
@@ -115,19 +113,19 @@ func TestRemoveFirmwareAlreadyAtDesiredVersion(t *testing.T) {
 
 	tasktaskHandlerCtx := &runner.TaskHandlerContext{
 		Logger: logrus.NewEntry(logrus.New()),
-		Task: &model.Task{
+		Task: &model.FirmwareTask{
 			ID:       serverID, // it just needs to be a UUID
 			WorkerID: registry.GetID("test-app").String(),
-			Server: &rtypes.Server{
-				ID: serverID.String(),
-				Components: rtypes.Components{
+			Server: &rctypes.Server{
+				UUID: serverID,
+				Components: []*rctypes.Component{
 					{
-						Name:     "BiOs",
-						Firmware: &common.Firmware{Installed: "2.6.6"},
+						Name:              "BiOs",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "2.6.6"},
 					},
 					{
-						Name:     "nic",
-						Firmware: &common.Firmware{Installed: "some-different-version"},
+						Name:              "nic",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "some-different-version"},
 					},
 				},
 			},
@@ -191,27 +189,27 @@ func TestPlanInstall_Outofband(t *testing.T) {
 	tasktaskHandlerCtx := &runner.TaskHandlerContext{
 		Logger:    logger,
 		Publisher: runner.NewTaskStatusPublisher(logger, publisher),
-		Task: &model.Task{
+		Task: &model.FirmwareTask{
 			ID:       taskID,
 			WorkerID: registry.GetID("test-app").String(),
 			Parameters: &rctypes.FirmwareInstallTaskParameters{
 				AssetID:               serverID,
 				ResetBMCBeforeInstall: true,
 			},
-			Server: &rtypes.Server{
-				ID: serverID.String(),
-				Components: rtypes.Components{
+			Server: &rctypes.Server{
+				UUID: serverID,
+				Components: []*rctypes.Component{
 					{
-						Name:     "BiOs",
-						Firmware: &common.Firmware{Installed: "2.6.6"},
+						Name:              "BiOs",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "2.6.6"},
 					},
 					{
-						Name:     "bmc",
-						Firmware: &common.Firmware{Installed: "5.10.00.00"},
+						Name:              "bmc",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "5.10.00.00"},
 					},
 					{
-						Name:     "nic",
-						Firmware: &common.Firmware{Installed: "1.2.2"},
+						Name:              "nic",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "1.2.2"},
 					},
 				},
 			},
@@ -281,27 +279,27 @@ func TestPlanInstall2_Outofband(t *testing.T) {
 	tasktaskHandlerCtx := &runner.TaskHandlerContext{
 		Logger:    logger,
 		Publisher: runner.NewTaskStatusPublisher(logger, publisher),
-		Task: &model.Task{
+		Task: &model.FirmwareTask{
 			ID:       taskID,
 			WorkerID: registry.GetID("test-app").String(),
 			Parameters: &rctypes.FirmwareInstallTaskParameters{
 				AssetID:      serverID,
 				ForceInstall: true,
 			},
-			Server: &rtypes.Server{
-				ID: serverID.String(),
-				Components: rtypes.Components{
+			Server: &rctypes.Server{
+				UUID: serverID,
+				Components: []*rctypes.Component{
 					{
-						Name:     "BiOs",
-						Firmware: &common.Firmware{Installed: "2.6.6"},
+						Name:              "BiOs",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "2.6.6"},
 					},
 					{
-						Name:     "bmc",
-						Firmware: &common.Firmware{Installed: "5.10.00.00"},
+						Name:              "bmc",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "5.10.00.00"},
 					},
 					{
-						Name:     "nic",
-						Firmware: &common.Firmware{Installed: "1.2.2"},
+						Name:              "nic",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "1.2.2"},
 					},
 				},
 			},
@@ -376,29 +374,29 @@ func TestPlanInstall_Inband(t *testing.T) {
 
 	serverID := uuid.MustParse("fa125199-e9dd-47d4-8667-ce1d26f58c4a")
 	taskID := uuid.MustParse("05c3296d-be5d-473a-b90c-4ce66cfdec65")
-	tasktaskHandlerCtx := &runner.TaskHandlerContext{
+	taskHandlerCtx := &runner.TaskHandlerContext{
 		Logger:    logger,
 		Publisher: runner.NewTaskStatusPublisher(logger, publisher),
-		Task: &model.Task{
+		Task: &model.FirmwareTask{
 			ID:       taskID,
 			WorkerID: registry.GetID("test-app").String(),
-			Data:     &model.TaskData{},
+			Data:     &model.FirmwareTaskData{},
 			Parameters: &rctypes.FirmwareInstallTaskParameters{
 				AssetID:      serverID,
 				ForceInstall: true,
 			},
-			Server: &rtypes.Server{
-				ID: serverID.String(),
-				Components: rtypes.Components{
+			Server: &rctypes.Server{
+				UUID: serverID,
+				Components: []*rctypes.Component{
 					{
-						Name:     "nic",
-						Model:    "0001",
-						Firmware: &common.Firmware{Installed: "1.2.2"},
+						Name:              "nic",
+						Model:             "0001",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "1.2.2"},
 					},
 					{
-						Name:     "drive",
-						Model:    "000",
-						Firmware: &common.Firmware{Installed: "4.2.1"},
+						Name:              "drive",
+						Model:             "000",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "4.2.1"},
 					},
 				},
 			},
@@ -412,7 +410,7 @@ func TestPlanInstall_Inband(t *testing.T) {
 		Times(2).
 		Return(&ironlibm.UpdateRequirements{}, nil)
 
-	h := taskHandler{mode: model.RunInband, TaskHandlerContext: tasktaskHandlerCtx}
+	h := taskHandler{mode: model.RunInband, TaskHandlerContext: taskHandlerCtx}
 	actions, err := h.planInstallActions(context.Background(), fwSet)
 	require.NoError(t, err, "no errors returned")
 	require.Equal(t, 2, len(actions), "expect 2 actions")
@@ -432,10 +430,10 @@ func TestPlanResumedTask(t *testing.T) {
 	taskID := uuid.MustParse("05c3296d-be5d-473a-b90c-4ce66cfdec65")
 	taskHandlerCtx := &runner.TaskHandlerContext{
 		Logger: logger,
-		Task: &model.Task{
+		Task: &model.FirmwareTask{
 			ID:       taskID,
 			WorkerID: registry.GetID("test-app").String(),
-			Data: &model.TaskData{
+			Data: &model.FirmwareTaskData{
 				ActionsPlanned: []*model.Action{
 					{
 						Firmware: rctypes.Firmware{Component: "drive", Version: "4.2.1"},
@@ -469,18 +467,18 @@ func TestPlanResumedTask(t *testing.T) {
 				AssetID:      serverID,
 				ForceInstall: true,
 			},
-			Server: &rtypes.Server{
-				ID: serverID.String(),
-				Components: rtypes.Components{
+			Server: &rctypes.Server{
+				UUID: serverID,
+				Components: []*rctypes.Component{
 					{
-						Name:     "nic",
-						Model:    "0001",
-						Firmware: &common.Firmware{Installed: "1.2.2"},
+						Name:              "nic",
+						Model:             "0001",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "1.2.2"},
 					},
 					{
-						Name:     "drive",
-						Model:    "000",
-						Firmware: &common.Firmware{Installed: "4.2.1"},
+						Name:              "drive",
+						Model:             "000",
+						InstalledFirmware: &rctypes.InstalledFirmware{Version: "4.2.1"},
 					},
 				},
 			},

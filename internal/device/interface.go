@@ -10,8 +10,6 @@ import (
 	ironlibm "github.com/metal-automata/ironlib/model"
 )
 
-//go:generate mockgen -source model.go -destination=../fixtures/mock.go -package=fixtures
-
 // QueryorOutofband interface defines the out-of-band methods to query a device.
 //
 // This is common interface to the ironlib and bmclib libraries.
@@ -43,6 +41,9 @@ type OutofbandQueryor interface {
 	FirmwareInstallUploaded(ctx context.Context, component, uploadVerifyTaskID string) (installTaskID string, err error)
 
 	FirmwareInstallUploadAndInitiate(ctx context.Context, component string, file *os.File) (taskID string, err error)
+
+	// BiosConfiguration retrieves the bios configuration for the device
+	BiosConfiguration(ctx context.Context) (map[string]string, error)
 }
 
 type InbandQueryor interface {

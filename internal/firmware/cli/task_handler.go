@@ -5,14 +5,18 @@ import (
 
 	"github.com/bmc-toolbox/common"
 	"github.com/metal-automata/agent/internal/device"
-	"github.com/metal-automata/agent/internal/firmware/outofband"
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/model"
+	"github.com/metal-automata/agent/internal/store"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
+
+	// device out-of-band
+	devoob "github.com/metal-automata/agent/internal/device/outofband"
+	// action handler out-of-band
+	ahoob "github.com/metal-automata/agent/internal/firmware/outofband"
 )
 
 var (
@@ -30,14 +34,14 @@ type handler struct {
 	onlyPlan bool
 }
 
-func (t *handler) Initialize(ctx context.Context) error {
+func (t *handler) Initialize(_ context.Context) error {
 	if t.taskCtx.DeviceQueryor == nil {
 		// TODO(joel): DeviceQueryor is to be instantiated based on the method(s) for the firmwares to be installed
 		// if its a mix of inband, out of band firmware to be installed, then both are to be queried and
 		// so this DeviceQueryor would have to be extended
 		//
 		// For this to work with both inband and out of band, the firmware set data should include the install method.
-		t.taskCtx.DeviceQueryor = outofband.NewDeviceQueryor(ctx, t.taskCtx.Task.Server, t.taskCtx.Logger)
+		t.taskCtx.DeviceQueryor = devoob.NewDeviceQueryor(t.taskCtx.Task.Server, t.taskCtx.Logger)
 	}
 
 	return nil
@@ -82,7 +86,7 @@ func (t *handler) PlanActions(ctx context.Context) error {
 		Last:               true,
 	}
 
-	aHandler := &outofband.ActionHandler{}
+	aHandler := &ahoob.ActionHandler{}
 	action, err := aHandler.ComposeAction(ctx, actionCtx)
 	if err != nil {
 		return err
@@ -101,14 +105,14 @@ func (t *handler) PlanActions(ctx context.Context) error {
 func (t *handler) Publish(context.Context) {}
 
 // query device components inventory from the device itself.
-func (t *handler) queryFromDevice(ctx context.Context) ([]*rtypes.Component, error) {
+func (t *handler) queryFromDevice(ctx context.Context) ([]*rctypes.Component, error) {
 	if t.taskCtx.DeviceQueryor == nil {
 		// TODO(joel): DeviceQueryor is to be instantiated based on the method(s) for the firmwares to be installed
 		// if its a mix of inband, out of band firmware to be installed, then both are to be queried and
 		// so this DeviceQueryor would have to be extended
 		//
 		// For this to work with both inband and out of band, the firmware set data should include the install method.
-		t.taskCtx.DeviceQueryor = outofband.NewDeviceQueryor(ctx, t.taskCtx.Task.Server, t.taskCtx.Logger)
+		t.taskCtx.DeviceQueryor = devoob.NewDeviceQueryor(t.taskCtx.Task.Server, t.taskCtx.Logger)
 	}
 
 	t.taskCtx.Task.Status.Append("connecting to device BMC")
@@ -132,10 +136,22 @@ func (t *handler) queryFromDevice(ctx context.Context) ([]*rtypes.Component, err
 		t.taskCtx.Task.Server.Model = common.FormatProductName(deviceCommon.Model)
 	}
 
-	return model.NewComponentConverter().CommonDeviceToComponents(deviceCommon)
+	// TODO: figure if this should be made easier
+	fleetdbAPI := store.FleetDBAPI{}
+	server, err := fleetdbAPI.ConvertCommonDevice(
+		t.taskCtx.Task.Parameters.AssetID,
+		deviceCommon,
+		model.InstallMethodOutofband,
+		false,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return server.Components, nil
 }
 
-func (t *handler) OnSuccess(ctx context.Context, _ *model.Task) {
+func (t *handler) OnSuccess(ctx context.Context, _ *model.FirmwareTask) {
 	if t.taskCtx.DeviceQueryor == nil {
 		return
 	}
@@ -145,7 +161,7 @@ func (t *handler) OnSuccess(ctx context.Context, _ *model.Task) {
 	}
 }
 
-func (t *handler) OnFailure(ctx context.Context, _ *model.Task) {
+func (t *handler) OnFailure(ctx context.Context, _ *model.FirmwareTask) {
 	if t.taskCtx.DeviceQueryor == nil {
 		return
 	}

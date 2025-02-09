@@ -15,16 +15,16 @@ import (
 func TestRunTask(t *testing.T) {
 	tests := []struct {
 		name          string
-		task          *model.Task
+		task          *model.FirmwareTask
 		mockSetup     func(*MockTaskHandler)
 		expectedState rctypes.State
 		expectedError error
 	}{
 		{
 			name: "Successful execution - new task",
-			task: &model.Task{
+			task: &model.FirmwareTask{
 				State: model.StatePending,
-				Data:  &model.TaskData{},
+				Data:  &model.FirmwareTaskData{},
 			},
 			mockSetup: func(m *MockTaskHandler) {
 				m.On("Initialize", mock.Anything).Return(nil)
@@ -38,9 +38,9 @@ func TestRunTask(t *testing.T) {
 		},
 		{
 			name: "Failure during Initialize",
-			task: &model.Task{
+			task: &model.FirmwareTask{
 				State: model.StatePending,
-				Data:  &model.TaskData{},
+				Data:  &model.FirmwareTaskData{},
 			},
 			mockSetup: func(m *MockTaskHandler) {
 				m.On("Initialize", mock.Anything).Return(errors.New("Initialize failed"))
@@ -52,9 +52,9 @@ func TestRunTask(t *testing.T) {
 		},
 		{
 			name: "Resume active task",
-			task: &model.Task{
+			task: &model.FirmwareTask{
 				State: model.StateActive,
-				Data:  &model.TaskData{},
+				Data:  &model.FirmwareTaskData{},
 			},
 			mockSetup: func(m *MockTaskHandler) {
 				m.On("Initialize", mock.Anything).Return(nil)
@@ -68,9 +68,9 @@ func TestRunTask(t *testing.T) {
 		},
 		{
 			name: "Task already in final state",
-			task: &model.Task{
+			task: &model.FirmwareTask{
 				State: model.StateSucceeded,
-				Data:  &model.TaskData{},
+				Data:  &model.FirmwareTaskData{},
 			},
 			mockSetup: func(m *MockTaskHandler) {
 				m.On("Publish", mock.Anything).Return(nil)
@@ -81,9 +81,9 @@ func TestRunTask(t *testing.T) {
 		},
 		{
 			name: "Failure during runActions",
-			task: &model.Task{
+			task: &model.FirmwareTask{
 				State: model.StatePending,
-				Data: &model.TaskData{
+				Data: &model.FirmwareTaskData{
 					ActionsPlanned: []*model.Action{
 						{
 							ID:    "action1",
@@ -134,15 +134,15 @@ func TestRunTask(t *testing.T) {
 func TestRunActions(t *testing.T) {
 	tests := []struct {
 		name                string
-		task                *model.Task
+		task                *model.FirmwareTask
 		mockSetup           func(*MockTaskHandler)
 		expectedError       error
 		expectedActionState rctypes.State
 	}{
 		{
 			name: "Successful execution of all actions",
-			task: &model.Task{
-				Data: &model.TaskData{
+			task: &model.FirmwareTask{
+				Data: &model.FirmwareTaskData{
 					ActionsPlanned: []*model.Action{
 						{
 							ID: "action1",
@@ -175,8 +175,8 @@ func TestRunActions(t *testing.T) {
 		},
 		{
 			name: "Action fails on second step",
-			task: &model.Task{
-				Data: &model.TaskData{
+			task: &model.FirmwareTask{
+				Data: &model.FirmwareTaskData{
 					ActionsPlanned: []*model.Action{
 						{
 							ID: "action1",
@@ -300,7 +300,7 @@ func TestResumeAction(t *testing.T) {
 func TestRunActionSteps(t *testing.T) {
 	tests := []struct {
 		name            string
-		task            *model.Task
+		task            *model.FirmwareTask
 		action          *model.Action
 		mockSetup       func(*MockTaskHandler)
 		expectedProceed bool
@@ -308,7 +308,7 @@ func TestRunActionSteps(t *testing.T) {
 	}{
 		{
 			name: "All steps succeed",
-			task: &model.Task{Data: &model.TaskData{}},
+			task: &model.FirmwareTask{Data: &model.FirmwareTaskData{}},
 			action: &model.Action{
 				Firmware: rctypes.Firmware{Component: "test", Version: "1.0"},
 				Steps: []*model.Step{
@@ -332,7 +332,7 @@ func TestRunActionSteps(t *testing.T) {
 		},
 		{
 			name: "Step fails",
-			task: &model.Task{Data: &model.TaskData{}},
+			task: &model.FirmwareTask{Data: &model.FirmwareTaskData{}},
 			action: &model.Action{
 				Firmware: rctypes.Firmware{Component: "test", Version: "1.0"},
 				Steps: []*model.Step{
@@ -351,7 +351,7 @@ func TestRunActionSteps(t *testing.T) {
 		},
 		{
 			name: "Installed firmware equals expected",
-			task: &model.Task{Data: &model.TaskData{}},
+			task: &model.FirmwareTask{Data: &model.FirmwareTaskData{}},
 			action: &model.Action{
 				Firmware: rctypes.Firmware{Component: "test", Version: "1.0"},
 				Steps: []*model.Step{
@@ -370,7 +370,7 @@ func TestRunActionSteps(t *testing.T) {
 		},
 		{
 			name: "Host power cycle required",
-			task: &model.Task{Data: &model.TaskData{}},
+			task: &model.FirmwareTask{Data: &model.FirmwareTaskData{}},
 			action: &model.Action{
 				Firmware: rctypes.Firmware{Component: "test", Version: "1.0"},
 				Steps: []*model.Step{
@@ -389,7 +389,7 @@ func TestRunActionSteps(t *testing.T) {
 		},
 		{
 			name: "Nil step handler",
-			task: &model.Task{Data: &model.TaskData{}},
+			task: &model.FirmwareTask{Data: &model.FirmwareTaskData{}},
 			action: &model.Action{
 				Firmware: rctypes.Firmware{Component: "test", Version: "1.0"},
 				Steps: []*model.Step{

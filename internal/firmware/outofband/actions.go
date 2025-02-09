@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/metal-automata/agent/internal/device"
+	"github.com/metal-automata/agent/internal/device/outofband"
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/model"
 	"github.com/pkg/errors"
@@ -43,6 +44,7 @@ type ActionHandler struct {
 
 func initHandler(actionCtx *runner.ActionHandlerContext, queryor device.OutofbandQueryor) *handler {
 	return &handler{
+		store:         actionCtx.Store,
 		task:          actionCtx.Task,
 		firmware:      actionCtx.Firmware,
 		publisher:     actionCtx.Publisher,
@@ -54,7 +56,7 @@ func initHandler(actionCtx *runner.ActionHandlerContext, queryor device.Outofban
 func (o *ActionHandler) ComposeAction(ctx context.Context, actionCtx *runner.ActionHandlerContext) (*model.Action, error) {
 	var deviceQueryor device.OutofbandQueryor
 	if actionCtx.DeviceQueryor == nil {
-		deviceQueryor = NewDeviceQueryor(ctx, actionCtx.Task.Server, actionCtx.Logger)
+		deviceQueryor = outofband.NewDeviceQueryor(actionCtx.Task.Server, actionCtx.Logger)
 	} else {
 		deviceQueryor = actionCtx.DeviceQueryor.(device.OutofbandQueryor)
 	}
@@ -73,7 +75,7 @@ func (o *ActionHandler) ComposeAction(ctx context.Context, actionCtx *runner.Act
 	// first action and a BMC reset is required before install
 	bmcResetBeforeInstall := actionCtx.First && actionCtx.Task.Parameters.ResetBMCBeforeInstall
 
-	bmcResetOnInstallFailure, bmcResetPostInstall := bmcResetParams(required)
+	bmcResetOnInstallFailure, bmcResetPostInstall := outofband.BmcResetParams(required)
 
 	steps, err := o.composeSteps(required, bmcResetBeforeInstall)
 	if err != nil {
@@ -86,7 +88,7 @@ func (o *ActionHandler) ComposeAction(ctx context.Context, actionCtx *runner.Act
 		BMCResetPreInstall:       bmcResetBeforeInstall,
 		BMCResetPostInstall:      bmcResetPostInstall,
 		BMCResetOnInstallFailure: bmcResetOnInstallFailure,
-		HostPowerOffPreInstall:   hostPowerOffRequired(required),
+		HostPowerOffPreInstall:   outofband.HostPowerOffRequired(required),
 		ForceInstall:             actionCtx.Task.Parameters.ForceInstall,
 		Steps:                    steps,
 		First:                    actionCtx.First,

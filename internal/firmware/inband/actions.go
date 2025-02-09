@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/metal-automata/agent/internal/device"
+	"github.com/metal-automata/agent/internal/device/inband"
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/model"
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -42,29 +42,36 @@ type ActionHandler struct {
 	handler *handler
 }
 
-func (i *ActionHandler) identifyComponent(ctx context.Context, component string, models []string) (*rtypes.Component, error) {
-	var components rtypes.Components
+func (i *ActionHandler) identifyComponent(ctx context.Context, wantComponent string, models []string) (*rctypes.Component, error) {
+	var components []*rctypes.Component
 
 	if len(i.handler.actionCtx.Task.Server.Components) > 0 {
-		components = rtypes.Components(i.handler.actionCtx.Task.Server.Components)
+		components = i.handler.actionCtx.Task.Server.Components
 	} else {
 		deviceCommon, err := i.handler.deviceQueryor.Inventory(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		components, err = model.NewComponentConverter().CommonDeviceToComponents(deviceCommon)
+		server, err := i.handler.actionCtx.Store.ConvertCommonDevice(
+			i.handler.actionCtx.Task.Parameters.AssetID,
+			deviceCommon,
+			model.InstallMethodOutofband,
+			false,
+		)
 		if err != nil {
 			return nil, err
 		}
+
+		components = server.Components
 	}
 
-	found := components.ByNameModel(component, models)
+	found := model.FindComponentByNameModel(components, wantComponent, models)
 	if found == nil {
 		// nolint:goerr113 // its clearer to define this error here
 		errComponentMatch := fmt.Errorf(
 			"unable to identify component '%s' from inventory for given models: %s",
-			component,
+			wantComponent,
 			strings.Join(models, ","),
 		)
 
@@ -85,7 +92,7 @@ func (i *ActionHandler) ComposeAction(ctx context.Context, actionCtx *runner.Act
 	i.handler.logger.WithFields(logrus.Fields{
 		"component": actionCtx.Firmware.Component,
 		"model":     component.Model,
-		"current":   component.Firmware.Installed,
+		"current":   component.InstalledFirmware.Version,
 	}).Info("target component identified for firmware install")
 
 	required, err := i.handler.deviceQueryor.FirmwareInstallRequirements(
@@ -130,7 +137,7 @@ func initHandler(actionCtx *runner.ActionHandlerContext) *handler {
 	var deviceQueryor device.InbandQueryor
 
 	if actionCtx.DeviceQueryor == nil {
-		deviceQueryor = NewDeviceQueryor(actionCtx.Logger)
+		deviceQueryor = inband.NewDeviceQueryor(actionCtx.Logger)
 	} else {
 		deviceQueryor = actionCtx.DeviceQueryor.(device.InbandQueryor)
 	}
@@ -190,7 +197,7 @@ func (i *ActionHandler) composeSteps(required *imodel.UpdateRequirements) (model
 // since the actions were previously composed, now they just have to be assigned the step handler methods.
 func AssignStepHandlers(action *model.Action, actionCtx *runner.ActionHandlerContext) error {
 	if actionCtx.DeviceQueryor == nil {
-		actionCtx.DeviceQueryor = NewDeviceQueryor(actionCtx.Logger)
+		actionCtx.DeviceQueryor = inband.NewDeviceQueryor(actionCtx.Logger)
 	}
 
 	handler := initHandler(actionCtx)

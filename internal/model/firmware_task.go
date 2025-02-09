@@ -9,12 +9,12 @@ import (
 	"github.com/pkg/errors"
 
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 )
 
 // InstallMethod is one of 'outofband' OR 'inband'
 // it is the method by which the firmware is installed on the device.
 type InstallMethod string
+type CollectionMethod = InstallMethod
 
 // FirmwarePlanMethod type defines the firmware resolution method by which
 // the firmware to applied is planned.
@@ -33,16 +33,6 @@ const (
 	// firmware versions to be installed have been defined as part of the request,
 	// and so no further firmware planning is required.
 	FromRequestedFirmware FirmwarePlanMethod = "fromRequestedFirmware"
-
-	// task states
-	//
-	// states the task state machine transitions through
-	StatePending   = rctypes.Pending
-	StateActive    = rctypes.Active
-	StateSucceeded = rctypes.Succeeded
-	StateFailed    = rctypes.Failed
-
-	TaskDataStructVersion = "1.0"
 )
 
 var (
@@ -50,14 +40,14 @@ var (
 	ErrInitTask          = errors.New("error initializing new task from condition")
 )
 
-// Alias parameterized model.Task
-type Task rctypes.Task[*rctypes.FirmwareInstallTaskParameters, *TaskData]
+// Alias parameterized model.FirmwareTask
+type FirmwareTask rctypes.Task[*rctypes.FirmwareInstallTaskParameters, *FirmwareTaskData]
 
-func (t *Task) SetState(s rctypes.State) {
+func (t *FirmwareTask) SetState(s rctypes.State) {
 	t.State = s
 }
 
-func (t *Task) MustMarshal() json.RawMessage {
+func (t *FirmwareTask) MustMarshal() json.RawMessage {
 	b, err := json.Marshal(t)
 	if err != nil {
 		panic(err)
@@ -66,7 +56,51 @@ func (t *Task) MustMarshal() json.RawMessage {
 	return b
 }
 
-type TaskData struct {
+func (t *FirmwareTask) CopyAsGenericTask() (*rctypes.Task[any, any], error) {
+	errTaskConv := errors.New("error in firmware install Task conversion")
+
+	paramsJSON, err := t.Parameters.Marshal()
+	if err != nil {
+		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Parameters")
+	}
+
+	dataJSON, err := t.Data.Marshal()
+	if err != nil {
+		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Data")
+	}
+
+	// deep copy fields referenced by pointer
+	asset, err := copystructure.Copy(t.Server)
+	if err != nil {
+		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Server")
+	}
+
+	fault, err := copystructure.Copy(t.Fault)
+	if err != nil {
+		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Fault")
+	}
+
+	return &rctypes.Task[any, any]{
+		StructVersion: t.StructVersion,
+		ID:            t.ID,
+		Kind:          t.Kind,
+		State:         t.State,
+		Status:        t.Status,
+		Data:          dataJSON,
+		Parameters:    paramsJSON,
+		Fault:         fault.(*rctypes.Fault),
+		FacilityCode:  t.FacilityCode,
+		Server:        asset.(*rctypes.Server),
+		WorkerID:      t.WorkerID,
+		TraceID:       t.TraceID,
+		SpanID:        t.SpanID,
+		CreatedAt:     t.CreatedAt,
+		UpdatedAt:     t.UpdatedAt,
+		CompletedAt:   t.CompletedAt,
+	}, nil
+}
+
+type FirmwareTaskData struct {
 	StructVersion string `json:"struct_version"`
 
 	// This flag is set when a action requires a host power cycle.
@@ -82,7 +116,7 @@ type TaskData struct {
 	Scratch map[string]string `json:"scratch,omitempty"`
 }
 
-func (td *TaskData) MapStringInterfaceToStruct(m map[string]interface{}) error {
+func (td *FirmwareTaskData) MapStringInterfaceToStruct(m map[string]interface{}) error {
 	jsonData, err := json.Marshal(m)
 	if err != nil {
 		return err
@@ -91,20 +125,20 @@ func (td *TaskData) MapStringInterfaceToStruct(m map[string]interface{}) error {
 	return json.Unmarshal(jsonData, td)
 }
 
-func (td *TaskData) Marshal() (json.RawMessage, error) {
+func (td *FirmwareTaskData) Marshal() (json.RawMessage, error) {
 	return json.Marshal(td)
 }
 
-func (td *TaskData) Unmarshal(r json.RawMessage) error {
+func (td *FirmwareTaskData) Unmarshal(r json.RawMessage) error {
 	return json.Unmarshal(r, td)
 }
 
-func NewTask(conditionID uuid.UUID, kind rctypes.Kind, params *rctypes.FirmwareInstallTaskParameters) (Task, error) {
-	t := Task{
+func NewTaskFirmware(conditionID uuid.UUID, kind rctypes.Kind, params *rctypes.FirmwareInstallTaskParameters) (FirmwareTask, error) {
+	t := FirmwareTask{
 		StructVersion: rctypes.TaskVersion1,
 		ID:            conditionID,
 		Kind:          kind,
-		Data:          &TaskData{},
+		Data:          &FirmwareTaskData{},
 		Status:        rctypes.NewTaskStatusRecord("initialized task"),
 		State:         StatePending,
 		Parameters:    params,
@@ -128,7 +162,7 @@ func NewTask(conditionID uuid.UUID, kind rctypes.Kind, params *rctypes.FirmwareI
 	return t, errors.Wrap(errTaskFirmwareParam, "no firmware list or firmwareSetID specified")
 }
 
-func convTaskParams(params any) (*rctypes.FirmwareInstallTaskParameters, error) {
+func convTaskFirmwareParams(params any) (*rctypes.FirmwareInstallTaskParameters, error) {
 	errParamsConv := errors.New("error in Task.Parameters conversion")
 
 	fwInstallParams := &rctypes.FirmwareInstallTaskParameters{}
@@ -152,10 +186,10 @@ func convTaskParams(params any) (*rctypes.FirmwareInstallTaskParameters, error) 
 	return fwInstallParams, nil
 }
 
-func convTaskData(data any) (*TaskData, error) {
+func convFirmwareTaskData(data any) (*FirmwareTaskData, error) {
 	errDataConv := errors.New("error in Task.Data conversion")
 
-	taskData := &TaskData{}
+	taskData := &FirmwareTaskData{}
 	switch v := data.(type) {
 	// When unpacked from a http request by the condition orc client,
 	// Parameters are of this type.
@@ -180,15 +214,15 @@ func convTaskData(data any) (*TaskData, error) {
 	return taskData, nil
 }
 
-func CopyAsFwInstallTask(task *rctypes.Task[any, any]) (*Task, error) {
+func CopyAsFirmwareTask(task *rctypes.Task[any, any]) (*FirmwareTask, error) {
 	errTaskConv := errors.New("error in generic Task conversion")
 
-	params, err := convTaskParams(task.Parameters)
+	params, err := convTaskFirmwareParams(task.Parameters)
 	if err != nil {
 		return nil, errors.Wrap(errTaskConv, err.Error())
 	}
 
-	data, err := convTaskData(task.Data)
+	data, err := convFirmwareTaskData(task.Data)
 	if err != nil {
 		return nil, errors.Wrap(errTaskConv, err.Error())
 	}
@@ -212,7 +246,7 @@ func CopyAsFwInstallTask(task *rctypes.Task[any, any]) (*Task, error) {
 		data.FirmwarePlanMethod = FromFirmwareSet
 	}
 
-	return &Task{
+	return &FirmwareTask{
 		StructVersion: task.StructVersion,
 		ID:            task.ID,
 		Kind:          task.Kind,
@@ -222,51 +256,7 @@ func CopyAsFwInstallTask(task *rctypes.Task[any, any]) (*Task, error) {
 		Parameters:    params,
 		Fault:         fault.(*rctypes.Fault),
 		FacilityCode:  task.FacilityCode,
-		Server:        asset.(*rtypes.Server),
-		WorkerID:      task.WorkerID,
-		TraceID:       task.TraceID,
-		SpanID:        task.SpanID,
-		CreatedAt:     task.CreatedAt,
-		UpdatedAt:     task.UpdatedAt,
-		CompletedAt:   task.CompletedAt,
-	}, nil
-}
-
-func CopyAsGenericTask(task *Task) (*rctypes.Task[any, any], error) {
-	errTaskConv := errors.New("error in firmware install Task conversion")
-
-	paramsJSON, err := task.Parameters.Marshal()
-	if err != nil {
-		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Parameters")
-	}
-
-	dataJSON, err := task.Data.Marshal()
-	if err != nil {
-		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Data")
-	}
-
-	// deep copy fields referenced by pointer
-	asset, err := copystructure.Copy(task.Server)
-	if err != nil {
-		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Server")
-	}
-
-	fault, err := copystructure.Copy(task.Fault)
-	if err != nil {
-		return nil, errors.Wrap(errTaskConv, err.Error()+": Task.Fault")
-	}
-
-	return &rctypes.Task[any, any]{
-		StructVersion: task.StructVersion,
-		ID:            task.ID,
-		Kind:          task.Kind,
-		State:         task.State,
-		Status:        task.Status,
-		Data:          dataJSON,
-		Parameters:    paramsJSON,
-		Fault:         fault.(*rctypes.Fault),
-		FacilityCode:  task.FacilityCode,
-		Server:        asset.(*rtypes.Server),
+		Server:        asset.(*rctypes.Server),
 		WorkerID:      task.WorkerID,
 		TraceID:       task.TraceID,
 		SpanID:        task.SpanID,

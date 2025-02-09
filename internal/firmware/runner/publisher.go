@@ -16,7 +16,7 @@ var (
 
 // Publisher defines methods to publish task information.
 type Publisher interface {
-	Publish(ctx context.Context, task *model.Task) error
+	Publish(ctx context.Context, task *model.FirmwareTask) error
 }
 
 // StatusPublisher implements the Publisher interface
@@ -33,8 +33,8 @@ func NewTaskStatusPublisher(logger *logrus.Entry, cp ctrl.Publisher) Publisher {
 	}
 }
 
-func (s *StatusPublisher) Publish(ctx context.Context, task *model.Task) error {
-	genericTask, err := model.CopyAsGenericTask(task)
+func (s *StatusPublisher) Publish(ctx context.Context, task *model.FirmwareTask) error {
+	genericTask, err := task.CopyAsGenericTask()
 	if err != nil {
 		err = errors.Wrap(ErrPublishTask, err.Error())
 		s.logger.WithError(err).Warn("Task publish error")
@@ -42,10 +42,12 @@ func (s *StatusPublisher) Publish(ctx context.Context, task *model.Task) error {
 		return err
 	}
 
-	// overwrite credentials before this gets written back to the repository
-	genericTask.Server.BMCAddress = ""
-	genericTask.Server.BMCPassword = ""
-	genericTask.Server.BMCUser = ""
+	if genericTask.Server.BMC != nil {
+		// overwrite credentials before this gets written back to the repository
+		genericTask.Server.BMC.IPAddress = ""
+		genericTask.Server.BMC.Password = ""
+		genericTask.Server.BMC.Username = ""
+	}
 
 	if err := s.cp.Publish(ctx, genericTask, false); err != nil {
 		err = errors.Wrap(ErrPublishStatus, err.Error())

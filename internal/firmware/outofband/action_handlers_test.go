@@ -7,11 +7,13 @@ import (
 
 	bconsts "github.com/bmc-toolbox/bmclib/v2/constants"
 	"github.com/bmc-toolbox/common"
+	"github.com/google/uuid"
 	"github.com/metal-automata/agent/internal/device"
+	"github.com/metal-automata/agent/internal/device/outofband"
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/model"
+	"github.com/metal-automata/agent/internal/store"
 	rctypes "github.com/metal-automata/rivets/condition"
-	rtypes "github.com/metal-automata/rivets/types"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -22,10 +24,16 @@ import (
 func newTestActionCtx() *runner.ActionHandlerContext {
 	return &runner.ActionHandlerContext{
 		TaskHandlerContext: &runner.TaskHandlerContext{
-			Task: &model.Task{
+			Task: &model.FirmwareTask{
 				Parameters: &rctypes.FirmwareInstallTaskParameters{},
-				Server:     &rtypes.Server{},
-				State:      model.StateActive,
+				Server: &rctypes.Server{
+					BMC: &rctypes.BMC{
+						Username:  "foo",
+						Password:  "bar",
+						IPAddress: "127.0.0.1",
+					},
+				},
+				State: model.StateActive,
 			},
 			Logger: logrus.NewEntry(logrus.New()),
 		},
@@ -70,10 +78,19 @@ func TestCheckCurrentFirmware(t *testing.T) {
 	// helper func to debug device conversion
 	conversionDebug := func(t *testing.T, dev *common.Device) {
 		t.Helper()
-		exp, cErr := model.NewComponentConverter().CommonDeviceToComponents(dev)
+
+		// TODO: figure if this should be made easier
+		fleetdbAPI := store.FleetDBAPI{}
+		server, cErr := fleetdbAPI.ConvertCommonDevice(
+			uuid.New(),
+			dev,
+			model.InstallMethodOutofband,
+			false,
+		)
+
 		require.NoError(t, cErr)
-		t.Logf("expected components length: %d\n", len(exp))
-		for i, c := range exp {
+		t.Logf("expected components length: %d\n", len(server.Components))
+		for i, c := range server.Components {
 			t.Logf("component %d => %#v\n", i, c)
 		}
 	}
@@ -89,7 +106,6 @@ func TestCheckCurrentFirmware(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, "pound sand", err.Error())
 	})
-
 	t.Run("nil inventory", func(t *testing.T) {
 		t.Parallel()
 		handler, dq := init(t)
@@ -97,9 +113,8 @@ func TestCheckCurrentFirmware(t *testing.T) {
 		dq.EXPECT().Inventory(mock.Anything).Times(1).Return(nil, nil)
 		err := handler.checkCurrentFirmware(ctx)
 		require.Error(t, err)
-		require.ErrorIs(t, err, model.ErrComponentConverter)
+		require.ErrorIs(t, err, ErrInventory)
 	})
-
 	t.Run("bad component slug", func(t *testing.T) {
 		t.Parallel()
 		handler, dq := init(t)
@@ -114,7 +129,6 @@ func TestCheckCurrentFirmware(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, ErrComponentNotFound)
 	})
-
 	t.Run("blank installed version", func(t *testing.T) {
 		t.Parallel()
 		debug := false
@@ -216,7 +230,7 @@ func TestPollFirmwareInstallStatus(t *testing.T) {
 		{
 			"too many failures, returns error",
 			"unknown",
-			ErrMaxBMCQueryAttempts,
+			outofband.ErrMaxBMCQueryAttempts,
 		},
 		{
 			"install requires a Host power cycle",
@@ -226,12 +240,12 @@ func TestPollFirmwareInstallStatus(t *testing.T) {
 		{
 			"install state running exceeds max BMC query attempts",
 			"running",
-			ErrMaxBMCQueryAttempts,
+			outofband.ErrMaxBMCQueryAttempts,
 		},
 		{
 			"install state failed returns error",
 			"failed",
-			ErrFirmwareInstallFailed,
+			outofband.ErrFirmwareInstallFailed,
 		},
 		{
 			"install state complete returns",
@@ -262,12 +276,12 @@ func TestPollFirmwareInstallStatus(t *testing.T) {
 		return ah.handler, m
 	}
 
+	os.Setenv(model.EnvTesting, "1")
+	defer os.Unsetenv(model.EnvTesting)
+
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			handler, m := init(t)
-
-			os.Setenv(envTesting, "1")
-			defer os.Unsetenv(envTesting)
 
 			m.EXPECT().FirmwareTaskStatus(
 				mock.Anything,

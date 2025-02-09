@@ -8,8 +8,6 @@ import (
 
 	"github.com/bmc-toolbox/common"
 	"github.com/metal-automata/agent/internal/device"
-	"github.com/metal-automata/agent/internal/firmware/inband"
-	"github.com/metal-automata/agent/internal/firmware/outofband"
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/model"
 	"github.com/metal-automata/agent/internal/store"
@@ -17,6 +15,14 @@ import (
 	"github.com/sirupsen/logrus"
 
 	rctypes "github.com/metal-automata/rivets/condition"
+	// device inband
+	devinb "github.com/metal-automata/agent/internal/device/inband"
+	// device out-of-band
+	devoob "github.com/metal-automata/agent/internal/device/outofband"
+	// out-of-band action handler
+	ahoob "github.com/metal-automata/agent/internal/firmware/outofband"
+	// inband action handler
+	ahinb "github.com/metal-automata/agent/internal/firmware/inband"
 )
 
 var (
@@ -37,7 +43,7 @@ type taskHandler struct {
 
 func newTaskHandler(
 	mode model.RunMode,
-	task *model.Task,
+	task *model.FirmwareTask,
 	storage store.Repository,
 	publisher runner.Publisher,
 	logger *logrus.Entry,
@@ -54,13 +60,13 @@ func newTaskHandler(
 	}
 }
 
-func (t *taskHandler) Initialize(ctx context.Context) error {
+func (t *taskHandler) Initialize(_ context.Context) error {
 	if t.DeviceQueryor == nil {
 		switch t.mode {
 		case model.RunInband:
-			t.DeviceQueryor = inband.NewDeviceQueryor(t.Logger)
+			t.DeviceQueryor = devinb.NewDeviceQueryor(t.Logger)
 		case model.RunOutofband:
-			t.DeviceQueryor = outofband.NewDeviceQueryor(ctx, t.Task.Server, t.Logger)
+			t.DeviceQueryor = devoob.NewDeviceQueryor(t.Task.Server, t.Logger)
 		}
 	}
 
@@ -93,14 +99,14 @@ func (t *taskHandler) Query(ctx context.Context) error {
 		t.Task.Server.Model = common.FormatProductName(deviceCommon.Model)
 	}
 
-	components, err := model.NewComponentConverter().CommonDeviceToComponents(deviceCommon)
+	server, err := t.Store.ConvertCommonDevice(t.Task.Parameters.AssetID, deviceCommon, model.InstallMethod(t.mode), true)
 	if err != nil {
 		return errors.Wrap(errTaskQueryInventory, err.Error())
 	}
 
 	// component inventory was identified
-	if len(components) > 0 {
-		t.Task.Server.Components = components
+	if len(server.Components) > 0 {
+		t.Task.Server.Components = server.Components
 
 		return nil
 	}
@@ -218,7 +224,7 @@ func (t *taskHandler) planResumedTask() error {
 			Last:               action.Last,
 		}
 
-		if err := inband.AssignStepHandlers(action, actionCtx); err != nil {
+		if err := ahinb.AssignStepHandlers(action, actionCtx); err != nil {
 			return errors.Wrap(errTaskPlanActions, "failed to assign action step taskHandler: "+err.Error())
 		}
 	}
@@ -273,7 +279,7 @@ func (t *taskHandler) planInstallActions(ctx context.Context, firmwares []*rctyp
 				continue
 			}
 
-			actionHander = &outofband.ActionHandler{}
+			actionHander = &ahoob.ActionHandler{}
 		}
 
 		if t.mode == model.RunInband {
@@ -281,7 +287,7 @@ func (t *taskHandler) planInstallActions(ctx context.Context, firmwares []*rctyp
 				continue
 			}
 
-			actionHander = &inband.ActionHandler{}
+			actionHander = &ahinb.ActionHandler{}
 		}
 
 		actionCtx := &runner.ActionHandlerContext{
@@ -338,7 +344,7 @@ func (t *taskHandler) removeFirmwareAlreadyAtDesiredVersion(fws []*rctypes.Firmw
 
 	invMap := make(map[string]string)
 	for _, cmp := range t.Task.Server.Components {
-		invMap[strings.ToLower(cmp.Name)] = cmp.Firmware.Installed
+		invMap[strings.ToLower(cmp.Name)] = cmp.InstalledFirmware.Version
 	}
 
 	fmtCause := func(component, cause, currentV, requestedV string) string {
@@ -411,7 +417,7 @@ func (t *taskHandler) removeFirmwareAlreadyAtDesiredVersion(fws []*rctypes.Firmw
 	return toInstall
 }
 
-func (t *taskHandler) OnSuccess(ctx context.Context, _ *model.Task) {
+func (t *taskHandler) OnSuccess(ctx context.Context, _ *model.FirmwareTask) {
 	if t.mode == model.RunInband || t.DeviceQueryor == nil {
 		return
 	}
@@ -421,7 +427,7 @@ func (t *taskHandler) OnSuccess(ctx context.Context, _ *model.Task) {
 	}
 }
 
-func (t *taskHandler) OnFailure(ctx context.Context, _ *model.Task) {
+func (t *taskHandler) OnFailure(ctx context.Context, _ *model.FirmwareTask) {
 	if t.mode == model.RunInband || t.DeviceQueryor == nil {
 		return
 	}

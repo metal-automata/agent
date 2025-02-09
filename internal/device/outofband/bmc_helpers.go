@@ -12,29 +12,30 @@ import (
 	"strings"
 	"time"
 
-	bmclib "github.com/bmc-toolbox/bmclib/v2"
 	"github.com/bmc-toolbox/bmclib/v2/constants"
-	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
 	"github.com/bmc-toolbox/bmclib/v2/providers"
-	logrusrv2 "github.com/bombsimon/logrusr/v2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/jpillora/backoff"
-	rtypes "github.com/metal-automata/rivets/types"
+	"github.com/metal-automata/agent/internal/model"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/exp/slices"
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/sirupsen/logrus"
+	bmclib "github.com/bmc-toolbox/bmclib/v2"
+	bmcliberrs "github.com/bmc-toolbox/bmclib/v2/errors"
+	logrusrv2 "github.com/bombsimon/logrusr/v2"
+	rctypes "github.com/metal-automata/rivets/condition"
 )
 
 // NOTE: the constants.FirmwareInstallStep type will be moved to the FirmwareInstallProperties struct type which will make this easier
-func hostPowerOffRequired(steps []constants.FirmwareInstallStep) bool {
+func HostPowerOffRequired(steps []constants.FirmwareInstallStep) bool {
 	return slices.Contains(steps, constants.FirmwareInstallStepPowerOffHost)
 }
 
 // NOTE: the constants.FirmwareInstallStep type will be moved to the FirmwareInstallProperties struct type which will make this easier
-func bmcResetParams(steps []constants.FirmwareInstallStep) (bmcResetOnInstallFailure, bmcResetPostInstall bool) {
+func BmcResetParams(steps []constants.FirmwareInstallStep) (bmcResetOnInstallFailure, bmcResetPostInstall bool) {
 	for _, step := range steps {
 		switch step {
 		case constants.FirmwareInstallStepResetBMCOnInstallFailure:
@@ -73,7 +74,7 @@ func newHTTPClient() *http.Client {
 }
 
 // newBmclibv2Client initializes a bmclib client with the given credentials
-func newBmclibv2Client(_ context.Context, asset *rtypes.Server, l *logrus.Entry) *bmclib.Client {
+func newBmclibv2Client(server *rctypes.Server, l *logrus.Entry) *bmclib.Client {
 	logger := logrus.New()
 	if l != nil {
 		logger.Formatter = l.Logger.Formatter
@@ -93,9 +94,9 @@ func newBmclibv2Client(_ context.Context, asset *rtypes.Server, l *logrus.Entry)
 	logruslogr := logrusrv2.New(logger)
 
 	bmcClient := bmclib.NewClient(
-		asset.BMCAddress,
-		asset.BMCUser,
-		asset.BMCPassword,
+		server.BMC.IPAddress,
+		server.BMC.Username,
+		server.BMC.Password,
 		bmclib.WithLogger(logruslogr),
 		bmclib.WithHTTPClient(newHTTPClient()),
 		bmclib.WithPerProviderTimeout(loginTimeout),
@@ -153,8 +154,8 @@ func (b *bmc) with(provider string) *bmclib.Client {
 	if !slices.Contains(b.availableProviders, provider) {
 		b.logger.WithFields(
 			logrus.Fields{
-				"vendor":    b.asset.Vendor,
-				"model":     b.asset.Model,
+				"vendor":    b.server.Vendor,
+				"model":     b.server.Model,
 				"required":  provider,
 				"available": strings.Join(b.availableProviders, ","),
 				"caller":    funcName,
@@ -166,8 +167,8 @@ func (b *bmc) with(provider string) *bmclib.Client {
 
 	b.logger.WithFields(
 		logrus.Fields{
-			"vendor":    b.asset.Vendor,
-			"model":     b.asset.Model,
+			"vendor":    b.server.Vendor,
+			"model":     b.server.Model,
 			"required":  provider,
 			"available": strings.Join(b.availableProviders, ","),
 			"caller":    funcName,
@@ -298,7 +299,7 @@ func (b *bmc) retry(ctx context.Context, maxAttempts, attempts int, cause error,
 
 	attempts++
 
-	if err := sleepWithContext(ctx, delay.ForAttempt(float64(attempts))); err != nil {
+	if err := model.SleepInContext(ctx, delay.ForAttempt(float64(attempts))); err != nil {
 		return 0, err
 	}
 
@@ -323,10 +324,10 @@ func (b *bmc) provider() (string, error) {
 		return b.installProvider, nil
 	}
 
-	if b.asset.Vendor == "" {
+	if b.server.Vendor == "" {
 		return "", errors.Wrap(
 			ErrFirmwareInstallProvider, "device has no vendor attribute set, and an install provider was not identified")
 	}
 
-	return b.asset.Vendor, nil
+	return b.server.Vendor, nil
 }

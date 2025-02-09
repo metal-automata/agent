@@ -11,10 +11,12 @@ import (
 	"github.com/bmc-toolbox/common"
 	"github.com/hashicorp/go-multierror"
 	"github.com/metal-automata/agent/internal/device"
+	"github.com/metal-automata/agent/internal/device/outofband"
 	"github.com/metal-automata/agent/internal/download"
 	"github.com/metal-automata/agent/internal/firmware/runner"
 	"github.com/metal-automata/agent/internal/metrics"
 	"github.com/metal-automata/agent/internal/model"
+	"github.com/metal-automata/agent/internal/store"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
@@ -68,50 +70,32 @@ var (
 	//	backoffMax    = 10 * time.Minute
 	//	backoffFactor = 2
 
-	// envTesting is set by tests to '1' to skip sleeps and backoffs in the handlers.
-	//
-	// nolint:gosec // no gosec, this isn't a credential
-	envTesting = "ENV_TESTING"
-
 	ErrFirmwareTempFile          = errors.New("error firmware temp file")
 	ErrSaveAction                = errors.New("error occurred in action state save")
 	ErrActionTypeAssertion       = errors.New("error occurred in action object type assertion")
-	ErrContextCancelled          = errors.New("context canceled")
 	ErrUnexpected                = errors.New("unexpected error occurred")
 	ErrInstalledFirmwareNotEqual = errors.New("installed and expected firmware not equal")
 	ErrInstalledVersionUnknown   = errors.New("installed version unknown")
 	ErrComponentNotFound         = errors.New("component not identified for firmware install")
 	ErrRequireHostPoweredOff     = errors.New("expected host to be powered off")
+	ErrInventory                 = errors.New("error in inventory collection")
 )
 
 type handler struct {
+	store         store.Repository
 	firmware      *rctypes.Firmware
-	task          *model.Task
+	task          *model.FirmwareTask
 	action        *model.Action
 	deviceQueryor device.OutofbandQueryor
 	publisher     runner.Publisher
 	logger        *logrus.Entry
 }
 
-func sleepWithContext(ctx context.Context, t time.Duration) error {
-	// skip sleep in tests
-	if os.Getenv(envTesting) == "1" {
-		return nil
-	}
-
-	select {
-	case <-time.After(t):
-		return nil
-	case <-ctx.Done():
-		return ErrContextCancelled
-	}
-}
-
 func (h *handler) serverPoweredOff(ctx context.Context) (bool, error) {
 	// init out of band device queryor - if one isn't already initialized
 	// this is done conditionally to enable tests to pass in a device queryor
 	if h.deviceQueryor == nil {
-		h.deviceQueryor = NewDeviceQueryor(ctx, h.task.Server, h.logger)
+		h.deviceQueryor = outofband.NewDeviceQueryor(h.task.Server, h.logger)
 	}
 
 	if err := h.deviceQueryor.Open(ctx); err != nil {
@@ -157,7 +141,7 @@ func (h *handler) powerOnServer(ctx context.Context) error {
 			return err
 		}
 
-		if err := sleepWithContext(ctx, delayHostPowerStatusChange); err != nil {
+		if err := model.SleepInContext(ctx, delayHostPowerStatusChange); err != nil {
 			return err
 		}
 	}
@@ -173,17 +157,21 @@ func (h *handler) installedEqualsExpected(ctx context.Context, component, expect
 		return err
 	}
 
+	if inv == nil {
+		return errors.Wrap(ErrInventory, "got nil")
+	}
+
 	h.logger.WithFields(
 		logrus.Fields{
 			"component": component,
 		}).Debug("Querying device inventory from BMC for current component firmware")
 
-	components, err := model.NewComponentConverter().CommonDeviceToComponents(inv)
+	server, err := store.ConvertCommonDeviceNoSlugValidate(h.task.Parameters.AssetID, inv, model.InstallMethodOutofband)
 	if err != nil {
 		return err
 	}
 
-	found := components.ByNameModel(component, models)
+	found := model.FindComponentByNameModel(server.Components, component, models)
 	if found == nil {
 		h.logger.WithFields(
 			logrus.Fields{
@@ -201,24 +189,29 @@ func (h *handler) installedEqualsExpected(ctx context.Context, component, expect
 		)
 	}
 
+	var installedVersion string
+	if found.InstalledFirmware != nil {
+		installedVersion = found.InstalledFirmware.Version
+	}
+
 	h.logger.WithFields(
 		logrus.Fields{
 			"component": found.Name,
 			"vendor":    found.Vendor,
 			"model":     found.Model,
 			"serial":    found.Serial,
-			"current":   found.Firmware.Installed,
+			"current":   installedVersion,
 			"expected":  expectedFirmware,
 		}).Debug("component version check")
 
-	if strings.TrimSpace(found.Firmware.Installed) == "" {
+	if strings.TrimSpace(installedVersion) == "" {
 		return ErrInstalledVersionUnknown
 	}
 
-	if !strings.EqualFold(expectedFirmware, found.Firmware.Installed) {
+	if !strings.EqualFold(expectedFirmware, installedVersion) {
 		return errors.Wrap(
 			ErrInstalledFirmwareNotEqual,
-			fmt.Sprintf("expected: %s, current: %s", expectedFirmware, found.Firmware.Installed),
+			fmt.Sprintf("expected: %s, current: %s", expectedFirmware, installedVersion),
 		)
 	}
 
@@ -502,7 +495,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 		logrus.Fields{
 			"component":   h.action.Firmware.Component,
 			"version":     h.action.Firmware.Version,
-			"bmc":         h.task.Server.BMCAddress,
+			"bmc":         h.task.Server.BMC.IPAddress,
 			"step":        h.action.FirmwareInstallStep,
 			"installTask": installTask,
 		}).Info("polling BMC for firmware task status")
@@ -516,7 +509,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 
 		// delay if we're in the second or subsequent attempts
 		if attempts > 0 {
-			if err := sleepWithContext(ctx, delayPollStatus); err != nil {
+			if err := model.SleepInContext(ctx, delayPollStatus); err != nil {
 				return err
 			}
 		}
@@ -524,7 +517,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 		// return when attempts exceed maxPollStatusAttempts
 		if attempts >= maxPollStatusAttempts {
 			attemptErrors = multierror.Append(attemptErrors, errors.Wrapf(
-				ErrMaxBMCQueryAttempts,
+				outofband.ErrMaxBMCQueryAttempts,
 				"%d attempts querying FirmwareTaskStatus(), elapsed: %s",
 				attempts,
 				time.Since(startTS).String(),
@@ -550,7 +543,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 			case nil:
 				h.logger.WithFields(
 					logrus.Fields{
-						"bmc":       h.task.Server.BMCAddress,
+						"bmc":       h.task.Server.BMC.IPAddress,
 						"component": h.firmware.Component,
 					}).Debug("Installed firmware matches expected.")
 
@@ -569,7 +562,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 				attemptErrors = multierror.Append(attemptErrors, err)
 				h.logger.WithFields(
 					logrus.Fields{
-						"bmc":       h.task.Server.BMCAddress,
+						"bmc":       h.task.Server.BMC.IPAddress,
 						"component": h.firmware.Component,
 						"elapsed":   time.Since(startTS).String(),
 						"attempts":  fmt.Sprintf("attempt %d/%d", attempts, maxPollStatusAttempts),
@@ -594,7 +587,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 				"component": h.firmware.Component,
 				"update":    h.firmware.FileName,
 				"version":   h.firmware.Version,
-				"bmc":       h.task.Server.BMCAddress,
+				"bmc":       h.task.Server.BMC.IPAddress,
 				"elapsed":   time.Since(startTS).String(),
 				"attempts":  fmt.Sprintf("attempt %d/%d", attempts, maxPollStatusAttempts),
 				"taskState": state,
@@ -615,7 +608,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 			// no implementations available.
 			if strings.Contains(err.Error(), "no FirmwareTaskVerifier implementations found") {
 				return errors.Wrap(
-					ErrFirmwareInstallFailed,
+					outofband.ErrFirmwareInstallFailed,
 					"Firmware install support for component not available:"+err.Error(),
 				)
 			}
@@ -628,7 +621,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 			if componentIsBMC(h.action.Firmware.Component) && installTask {
 				h.logger.WithFields(
 					logrus.Fields{
-						"bmc":       h.task.Server.BMCAddress,
+						"bmc":       h.task.Server.BMC.IPAddress,
 						"delay":     delayBMCReset.String(),
 						"taskState": state,
 						"bmcTaskID": h.action.BMCTaskID,
@@ -694,7 +687,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 				if err := h.powerCycleBMC(ctx); err != nil {
 					h.logger.WithFields(
 						logrus.Fields{
-							"bmc":       h.task.Server.BMCAddress,
+							"bmc":       h.task.Server.BMC.IPAddress,
 							"component": h.firmware.Component,
 							"err":       err.Error(),
 						}).Debug("install failure required a BMC reset, reset returned error")
@@ -702,12 +695,12 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 
 				h.logger.WithFields(
 					logrus.Fields{
-						"bmc":       h.task.Server.BMCAddress,
+						"bmc":       h.task.Server.BMC.IPAddress,
 						"component": h.firmware.Component,
 					}).Debug("BMC reset for failed BMC firmware install")
 			}
 
-			return errors.Wrap(ErrFirmwareInstallFailed, errMsg)
+			return errors.Wrap(outofband.ErrFirmwareInstallFailed, errMsg)
 
 		// return nil when install is complete
 		case bconsts.Complete:
@@ -722,7 +715,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 					if errBmcReset := h.powerCycleBMC(ctx); errBmcReset != nil {
 						h.logger.WithFields(
 							logrus.Fields{
-								"bmc":       h.task.Server.BMCAddress,
+								"bmc":       h.task.Server.BMC.IPAddress,
 								"component": h.firmware.Component,
 								"err":       errBmcReset.Error(),
 							}).Debug("install success required a BMC reset, reset returned error")
@@ -730,7 +723,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 
 					h.logger.WithFields(
 						logrus.Fields{
-							"bmc":       h.task.Server.BMCAddress,
+							"bmc":       h.task.Server.BMC.IPAddress,
 							"component": h.firmware.Component,
 						}).Debug("BMC reset for successful BMC firmware install")
 				}
@@ -741,7 +734,7 @@ func (h *handler) pollFirmwareTaskStatus(ctx context.Context) error {
 			return nil
 
 		default:
-			return errors.Wrap(ErrFirmwareTaskStateUnexpected, "state: "+string(state))
+			return errors.Wrap(outofband.ErrFirmwareTaskStateUnexpected, "state: "+string(state))
 		}
 	}
 }
@@ -750,7 +743,7 @@ func (h *handler) resetBMC(ctx context.Context) error {
 	h.logger.WithFields(
 		logrus.Fields{
 			"component": h.firmware.Component,
-			"bmc":       h.task.Server.BMCAddress,
+			"bmc":       h.task.Server.BMC.IPAddress,
 		}).Info("resetting BMC, delay introduced: " + delayBMCReset.String())
 
 	err := h.powerCycleBMC(ctx)
@@ -762,7 +755,7 @@ func (h *handler) resetBMC(ctx context.Context) error {
 		return nil
 	}
 
-	return sleepWithContext(ctx, delayBMCReset)
+	return model.SleepInContext(ctx, delayBMCReset)
 }
 
 func (h *handler) powerCycleBMC(ctx context.Context) error {
@@ -781,7 +774,7 @@ func (h *handler) powerCycleServer(ctx context.Context) error {
 	h.logger.WithFields(
 		logrus.Fields{
 			"component": h.firmware.Component,
-			"bmc":       h.task.Server.BMCAddress,
+			"bmc":       h.task.Server.BMC.IPAddress,
 		}).Info("resetting host for firmware install")
 
 	return h.deviceQueryor.SetPowerState(ctx, "cycle")
@@ -825,7 +818,7 @@ func (h *handler) powerOffServer(ctx context.Context) error {
 		h.logger.WithFields(
 			logrus.Fields{
 				"component": h.firmware.Component,
-				"bmc":       h.task.Server.BMCAddress,
+				"bmc":       h.task.Server.BMC.IPAddress,
 			}).Debug("powering off device")
 
 		if err := h.deviceQueryor.SetPowerState(ctx, "off"); err != nil {
