@@ -10,7 +10,6 @@ require (
 	github.com/bmc-toolbox/common v0.0.0-20250114061816-fab80349cae0
 	github.com/bombsimon/logrusr/v2 v2.0.1
 	github.com/coreos/go-oidc/v3 v3.12.0
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/emicklei/dot v1.6.4
 	github.com/equinix-labs/otel-init-go v0.0.9
 	github.com/google/uuid v1.6.0
@@ -21,7 +20,7 @@ require (
 	github.com/metal-automata/conditionorc v1.1.14-0.20250121063718-6bc1c4530c33
 	github.com/metal-automata/fleetdb v1.20.5-0.20250206062329-8fa8832c6bec
 	github.com/metal-automata/ironlib v0.5.1
-	github.com/metal-automata/rivets v1.4.1-0.20250204064847-15ad7979f572
+	github.com/metal-automata/rivets v1.4.1-0.20250209080841-42c22be70ee3
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nats-io/nats-server/v2 v2.10.25
@@ -55,6 +54,7 @@ require (
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/coreos/go-oidc v2.3.0+incompatible // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dselans/dmidecode v0.0.0-20180814053009-65c3f9d81910 // indirect
 	github.com/ericlagergren/decimal v0.0.0-20240411145413-00de7ca16731 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
